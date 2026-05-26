@@ -9,6 +9,12 @@ dist/
 build/
 .next/
 out/
+*.d.ts
+*.d.ts.map
+*.js
+*.js.map
+!vite.config.ts
+!commitlint.config.js
 
 # Environment
 .env
