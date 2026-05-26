@@ -90,10 +90,10 @@ relacionales.
 El proyecto debe poder levantarse en local de dos formas, para validar cada
 funcionalidad a medida que se construye. La fase 0.5 del plan lo define en
 detalle.
-- Gestor de paquetes: npm 10.x o yarn 4.x. El archivo `.nvmrc` fija Node.js LTS 22.11.0.
+- Gestor de paquetes: **yarn 4.x** (gestor principal). El archivo `.nvmrc` fija Node.js LTS 22.11.0.
   Usa `nvm use` si tienes nvm instalado, o configura manualmente la version.
 - Sin Docker Compose: la CLI de Supabase (`supabase start`) levanta la base de
-  datos local; cada app corre con `npm run dev` o `yarn dev`. Iteracion rapida.
+  datos local; cada app corre con `yarn dev`. Iteracion rapida.
 - Con Docker Compose: `docker compose up --build` levanta todo el entorno.
 - Versiones fijas: Docker Engine 29.x, Docker Compose v5.x (plugin V2+, se
   invoca `docker compose` con espacio; el binario `docker-compose` con guion es

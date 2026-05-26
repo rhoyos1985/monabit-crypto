@@ -7,32 +7,25 @@ Aplicación web fullstack para visualizar y gestionar información del mercado d
 ## Quickstart
 
 ### Prerequisitos
-- Node.js LTS 22.x (verificar con `nvm use` si tienes nvm instalado)
-- npm 10.x **o** yarn 4.x
+- Node.js LTS 22.x (verificar con `nvm use` si tienes nvm instalado; ver `.nvmrc`)
+- yarn 4.x (gestor de paquetes principal)
 - (Para fase 0.5) Docker Engine 29.x y Docker Compose v5.x
 
 ### Desarrollo local (sin Docker)
 
-**Con npm:**
+**Instalación y desarrollo:**
 ```bash
-npm install
-npm run dev              # Inicia frontend y backend en paralelo
-npm run typecheck       # TypeScript en todas las apps
-npm run lint            # ESLint en todas las apps
-```
-
-**Con yarn:**
-```bash
-yarn install
+yarn install            # Instalar dependencias
 yarn dev                # Inicia frontend y backend en paralelo
 yarn typecheck          # TypeScript en todas las apps
 yarn lint               # ESLint en todas las apps
+yarn build              # Build de producción en todas las apps
 ```
 
 **Apps por separado:**
 ```bash
-cd apps/frontend && npm run dev  # Frontend: http://localhost:5173
-cd apps/backend && npm run dev   # Backend: http://localhost:8080
+cd apps/frontend && yarn dev  # Frontend: http://localhost:5173
+cd apps/backend && yarn dev   # Backend: http://localhost:8080
 ```
 
 ## Estructura del proyecto
