@@ -1,70 +1,27 @@
+# Docker Compose para MonaBit - Desarrollo con Supabase local
+#
+# PREREQUISITOS: Ejecuta Supabase en el host primero
+#   npm install -g @supabase/cli
+#   supabase start
+#
+# Luego en otra terminal:
+#   docker compose up
+#
+# Los contenedores se conectarán a Supabase a través de host.docker.internal
+# (funciona en Mac/Windows Docker Desktop)
+
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: monabit-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-auth-schema.sql:/docker-entrypoint-initdb.d/init-auth-schema.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - monabit-network
-
-  supabase-auth:
-    image: supabase/gotrue:v2.137.0
-    container_name: monabit-supabase-auth
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
-      GOTRUE_DB_DRIVER: postgres
-      DB_NAMESPACE: auth
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      GOTRUE_SITE_URL: http://localhost:5173
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_MAILER_AUTOCONFIRM: "true"
-      GOTRUE_EXTERNAL_GOOGLE_ENABLED: "true"
-      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id}
-      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_CLIENT_SECRET:-your-google-client-secret}
-      API_EXTERNAL_URL: http://localhost:9999
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
-    ports:
-      - "9999:9999"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - monabit-network
-
   backend:
     build:
       context: .
       dockerfile: ./apps/backend/Dockerfile
       target: development
     container_name: monabit-backend
-    depends_on:
-      postgres:
-        condition: service_healthy
-      supabase-auth:
-        condition: service_healthy
     environment:
       PORT: 8080
-      SUPABASE_URL: http://supabase-auth:9999
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-super-secret-service-key}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-public-anon-key}
+      SUPABASE_URL: http://host.docker.internal:54321
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjM4OTYyNDAwLCJleHAiOjE5NjY1MzgwMDB9.DaYlNEVBx6U8-j6sSHeSeYBxSxs1FBJibowQtqKVNmY}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzODk2MjQwMCwiZXhwIjoxOTY2NTM4MDAwfQ.K5yD3dBI4VQpFWMkL5L2z1_UVTHvGZ2p0BzxDt_3zAc}
       COINGECKO_API_BASE: https://api.coingecko.com/api/v3
       COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
       CORS_ORIGIN: http://localhost:5173
@@ -96,8 +53,8 @@ services:
         condition: service_healthy
     environment:
       VITE_API_BASE_URL: http://localhost:8080
-      VITE_SUPABASE_URL: http://localhost:9999
-      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-public-anon-key}
+      VITE_SUPABASE_URL: http://localhost:54321
+      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzODk2MjQwMCwiZXhwIjoxOTY2NTM4MDAwfQ.K5yD3dBI4VQpFWMkL5L2z1_UVTHvGZ2p0BzxDt_3zAc}
     ports:
       - "5173:5173"
     volumes:
@@ -111,10 +68,6 @@ services:
       retries: 5
     networks:
       - monabit-network
-
-volumes:
-  postgres_data:
-    driver: local
 
 networks:
   monabit-network:

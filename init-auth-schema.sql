@@ -1,3 +1,3 @@
--- Create auth schema for Supabase GoTrue
-CREATE SCHEMA IF NOT EXISTS auth;
-GRANT ALL ON SCHEMA auth TO postgres;
+-- Este archivo no se utiliza más.
+-- Cuando usas 'supabase start', todas las migraciones se ejecutan automáticamente.
+-- Este archivo se mantiene solo para compatibilidad si alguien intenta usar Docker solo.
