@@ -33,11 +33,23 @@ const makeRequest = async <T>(
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
-  const data = (await response.json()) as ApiResponse<T>;
+  let response: Response;
+  try {
+    response = await fetch(url, options);
+  } catch (err) {
+    throw new Error('No hay conexión con el servidor. Verifica tu conexión a Internet.');
+  }
+
+  let data: ApiResponse<T>;
+  try {
+    data = (await response.json()) as ApiResponse<T>;
+  } catch {
+    throw new Error('El servidor devolvió una respuesta inválida. Por favor, intenta de nuevo.');
+  }
 
   if (!response.ok) {
-    throw new Error(data.apiMessage || 'Request failed');
+    const errorMessage = data.apiMessage || 'Error en la solicitud';
+    throw new Error(errorMessage);
   }
 
   return data.apiData as T;
