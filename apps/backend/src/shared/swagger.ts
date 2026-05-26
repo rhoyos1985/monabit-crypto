@@ -19,6 +19,20 @@ const swaggerOptions = {
         description: 'Backend server',
       },
     ],
+    tags: [
+      {
+        name: 'Authentication',
+        description: 'Autenticación y gestión de sesión',
+      },
+      {
+        name: 'Users',
+        description: 'Gestión de usuarios (solo para admins)',
+      },
+      {
+        name: 'Market',
+        description: 'Datos del mercado de criptomonedas',
+      },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -85,6 +99,54 @@ const swaggerOptions = {
                 formErrors: { type: 'array' },
               },
             },
+          },
+        },
+        CryptoData: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            symbol: { type: 'string' },
+            name: { type: 'string' },
+            image: { type: 'string', format: 'uri' },
+            currentPrice: { type: 'number' },
+            marketCap: { type: 'number', nullable: true },
+            marketCapRank: { type: 'integer', nullable: true },
+            totalVolume: { type: 'number', nullable: true },
+            changePercent24h: { type: 'number', nullable: true },
+            lastUpdated: { type: 'string', format: 'date-time' },
+          },
+          required: [
+            'id',
+            'symbol',
+            'name',
+            'image',
+            'currentPrice',
+            'lastUpdated',
+          ],
+        },
+        MarketKPIs: {
+          type: 'object',
+          properties: {
+            totalMarketCap: { type: 'number' },
+            totalVolume: { type: 'number' },
+            btcDominance: { type: 'number' },
+            ethereumDominance: { type: 'number' },
+            lastUpdated: { type: 'string', format: 'date-time' },
+          },
+          required: [
+            'totalMarketCap',
+            'totalVolume',
+            'btcDominance',
+            'ethereumDominance',
+            'lastUpdated',
+          ],
+        },
+        ApiResponse: {
+          type: 'object',
+          properties: {
+            httpStatus: { type: 'string', example: '200 - OK' },
+            apiMessage: { type: 'string' },
+            apiData: { type: 'object' },
           },
         },
       },
