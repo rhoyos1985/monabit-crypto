@@ -25,17 +25,24 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
   });
 
   const registerUser = async (credentials: AuthCredentials): Promise<AuthResult> => {
-    const { data, error } = await supabase.auth.signUp({
-      email: credentials.email,
-      password: credentials.password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    if (error || !data.user || !data.session) {
-      const errorMsg = error?.message || 'Error desconocido';
-      if (errorMsg.includes('already registered')) {
-        throw new HTTPConflict('Este email ya está registrado. Por favor, usa otro email o inicia sesión.');
+      if (error || !data.user || !data.session) {
+        const errorMsg = error?.message || 'Error desconocido';
+        if (errorMsg.includes('already registered')) {
+          throw new HTTPConflict('Este email ya está registrado. Por favor, usa otro email o inicia sesión.');
+        }
+        throw new HTTPBadRequest(`Error al registrarse: ${errorMsg}`);
       }
-      throw new HTTPBadRequest(`Error al registrarse: ${errorMsg}`);
+    } catch (err) {
+      if (err instanceof HTTPConflict || err instanceof HTTPBadRequest) {
+        throw err;
+      }
+      throw new HTTPBadRequest('Error al conectar con el servicio de autenticación. Por favor, intenta de nuevo más tarde.');
     }
 
     const user = await getCurrentUser(data.session.access_token);
@@ -51,13 +58,20 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
   };
 
   const loginUser = async (credentials: AuthCredentials): Promise<AuthResult> => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    if (error || !data.session) {
-      throw new HTTPUnauthorized('Email o contraseña incorrectos. Por favor, intenta de nuevo.');
+      if (error || !data.session) {
+        throw new HTTPUnauthorized('Email o contraseña incorrectos. Por favor, intenta de nuevo.');
+      }
+    } catch (err) {
+      if (err instanceof HTTPUnauthorized) {
+        throw err;
+      }
+      throw new HTTPBadRequest('Error al conectar con el servicio de autenticación. Por favor, intenta de nuevo más tarde.');
     }
 
     const user = await getCurrentUser(data.session.access_token);
