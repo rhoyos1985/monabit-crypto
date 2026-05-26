@@ -4,7 +4,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
  * Seed el usuario admin inicial de manera idempotente.
  * Si el admin ya existe, no lo modifica.
  */
-const seedAdmin = async (supabase: SupabaseClient, adminEmail: string, adminPassword: string): Promise<void> => {
+const seedAdmin = async (supabase: SupabaseClient, adminEmail: string, _adminPassword: string): Promise<void> => {
   try {
     // Verificar si el admin ya existe
     const { data: existingAdmin } = await supabase
