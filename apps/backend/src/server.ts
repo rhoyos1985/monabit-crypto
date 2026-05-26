@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { createClient } from '@supabase/supabase-js';
 import { createAuthRouter } from './modules/auth/interfaces/router.js';
 import { createUsersRouter } from './modules/users/interfaces/router.js';
+import { createMarketRouter } from './modules/market/interfaces/router.js';
 import { errorHandler } from './shared/error-handler.js';
 import { swaggerSpec } from './shared/swagger.js';
 import logger from './shared/logger.js';
@@ -49,6 +50,7 @@ app.get('/health', (_req, res) => {
 // Rutas de módulos
 app.use('/auth', createAuthRouter(supabase));
 app.use('/users', createUsersRouter(supabase));
+app.use('/market', createMarketRouter(supabase));
 
 // Middleware de error (siempre al final)
 app.use(errorHandler);
