@@ -54,3 +54,6 @@ coverage/
 *.tfstate.backup
 *.tfvars
 *.tfvars.json
+
+# Database migrations (development only, generated at runtime)
+*.sql

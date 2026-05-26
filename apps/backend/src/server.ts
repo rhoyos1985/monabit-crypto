@@ -10,6 +10,7 @@ import { createMarketRouter } from './modules/market/interfaces/router.js';
 import { errorHandler } from './shared/error-handler.js';
 import { swaggerSpec } from './shared/swagger.js';
 import logger from './shared/logger.js';
+import { runMigrations } from './shared/migrations.js';
 
 dotenv.config();
 
@@ -56,6 +57,18 @@ app.use('/market', createMarketRouter(supabase));
 app.use(errorHandler);
 
 // Iniciar servidor
-app.listen(PORT, () => {
-  logger.info(`Backend running on port ${PORT}`);
-});
+const start = async (): Promise<void> => {
+  try {
+    await runMigrations(supabase);
+    app.listen(PORT, () => {
+      logger.info(`Backend running on port ${PORT}`);
+    });
+  } catch (err) {
+    logger.error('Failed to start server', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    process.exit(1);
+  }
+};
+
+void start();
