@@ -1,0 +1,117 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: monabit-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monabit-network
+
+  supabase-auth:
+    image: supabase/gotrue:v2.137.0
+    container_name: monabit-supabase-auth
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      GOTRUE_DB_DRIVER: postgres
+      DB_NAMESPACE: auth
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_SITE_URL: http://localhost:5173
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: "true"
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_CLIENT_SECRET:-your-google-client-secret}
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+    ports:
+      - "9999:9999"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monabit-network
+
+  backend:
+    build:
+      context: ./apps/backend
+      target: development
+    container_name: monabit-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      supabase-auth:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      SUPABASE_URL: http://supabase-auth:9999
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-super-secret-service-key}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-public-anon-key}
+      COINGECKO_API_BASE: https://api.coingecko.com/api/v3
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
+      CORS_ORIGIN: http://localhost:5173
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Change123!@#}
+      LOG_LEVEL: debug
+      NODE_ENV: development
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./apps/backend/src:/app/src
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monabit-network
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      target: development
+    container_name: monabit-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+      VITE_SUPABASE_URL: http://localhost:9999
+      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-public-anon-key}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend/src:/app/src
+      - ./apps/frontend/index.html:/app/index.html
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monabit-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  monabit-network:
+    driver: bridge
