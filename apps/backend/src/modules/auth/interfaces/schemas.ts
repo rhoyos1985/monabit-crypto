@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-  email: z.string().email('Email must be valid'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.string().email('El email debe ser válido').min(1, 'El email es requerido'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
   // Ignorar cualquier campo 'role' que venga en el body
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Email must be valid'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email('El email debe ser válido').min(1, 'El email es requerido'),
+  password: z.string().min(1, 'La contraseña es requerida'),
 });
 
 export const authTokenResponseSchema = z.object({

@@ -1,6 +1,7 @@
 import { ICoinGeckoClient } from '../application/ports.js';
 import { MarketOverview, CryptoData, MarketKPIs } from '../domain/types.js';
 import logger from '../../../shared/logger.js';
+import { AppError, HttpStatusCode } from '../../../shared/http-error.js';
 
 interface CoinGeckoCrypto {
   id: string;
@@ -66,8 +67,9 @@ export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {
       ]);
 
       if (!cryptosResponse.ok || !globalResponse.ok) {
-        throw new Error(
-          `CoinGecko API error: ${cryptosResponse.status} ${globalResponse.status}`
+        throw new AppError(
+          'No se pudo obtener datos de precios de criptomonedas. Por favor, intenta de nuevo más tarde.',
+          HttpStatusCode.SERVICE_UNAVAILABLE
         );
       }
 

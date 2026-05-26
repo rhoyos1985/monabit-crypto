@@ -1,17 +1,18 @@
 import { IAuthService } from './ports.js';
 import { AuthCredentials, AuthResult, User } from '../domain/types.js';
+import { HTTPBadRequest, HTTPUnauthorized } from '../../../shared/http-error.js';
 
 export const registerUser = (authService: IAuthService) => async (
   credentials: AuthCredentials
 ): Promise<AuthResult> => {
   if (!credentials.email || !credentials.password) {
-    throw new Error('Email and password are required');
+    throw new HTTPBadRequest('El email y contraseña son requeridos');
   }
 
   const result = await authService.registerUser(credentials);
 
   if (result.user.role !== 'user') {
-    throw new Error('Registration must create user with role "user"');
+    throw new HTTPBadRequest('El usuario debe ser registrado con rol "user"');
   }
 
   return result;
@@ -21,7 +22,7 @@ export const loginUser = (authService: IAuthService) => async (
   credentials: AuthCredentials
 ): Promise<AuthResult> => {
   if (!credentials.email || !credentials.password) {
-    throw new Error('Email and password are required');
+    throw new HTTPBadRequest('El email y contraseña son requeridos');
   }
 
   return await authService.loginUser(credentials);
@@ -29,7 +30,7 @@ export const loginUser = (authService: IAuthService) => async (
 
 export const getCurrentUser = (authService: IAuthService) => async (token: string): Promise<User> => {
   if (!token) {
-    throw new Error('Token is required');
+    throw new HTTPUnauthorized('El token es requerido');
   }
 
   return await authService.getCurrentUser(token);

@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { IUserRepository } from '../application/ports.js';
 import { UserDTO, CreateUserInput } from '../domain/types.js';
+import { HTTPBadRequest, HTTPConflict } from '../../../shared/http-error.js';
 
 interface Profile {
   id: string;
@@ -61,7 +62,10 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
       .single();
 
     if (error || !data) {
-      throw new Error(`Failed to create user: ${error?.message}`);
+      if (error?.message?.includes('duplicate')) {
+        throw new HTTPConflict('Este email ya está registrado.');
+      }
+      throw new HTTPBadRequest(`Error al crear usuario: ${error?.message || 'Error desconocido'}`);
     }
 
     return mapProfileToUser(data as Profile);
@@ -88,7 +92,7 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
       .single();
 
     if (error || !updatedProfile) {
-      throw new Error(`Failed to update user: ${error?.message}`);
+      throw new HTTPBadRequest(`Error al actualizar usuario: ${error?.message || 'Error desconocido'}`);
     }
 
     return mapProfileToUser(updatedProfile as Profile);

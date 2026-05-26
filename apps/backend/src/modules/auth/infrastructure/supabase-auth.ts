@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { IAuthService } from '../application/ports.js';
 import { User, AuthToken, AuthCredentials, AuthResult } from '../domain/types.js';
+import { HTTPConflict, HTTPUnauthorized, HTTPBadRequest } from '../../../shared/http-error.js';
 
 interface Profile {
   id: string;
@@ -30,7 +31,11 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
     });
 
     if (error || !data.user || !data.session) {
-      throw new Error(`Registration failed: ${error?.message || 'Unknown error'}`);
+      const errorMsg = error?.message || 'Error desconocido';
+      if (errorMsg.includes('already registered')) {
+        throw new HTTPConflict('Este email ya está registrado. Por favor, usa otro email o inicia sesión.');
+      }
+      throw new HTTPBadRequest(`Error al registrarse: ${errorMsg}`);
     }
 
     const user = await getCurrentUser(data.session.access_token);
@@ -52,7 +57,7 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
     });
 
     if (error || !data.session) {
-      throw new Error(`Login failed: ${error?.message || 'Invalid credentials'}`);
+      throw new HTTPUnauthorized('Email o contraseña incorrectos. Por favor, intenta de nuevo.');
     }
 
     const user = await getCurrentUser(data.session.access_token);
@@ -69,13 +74,13 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
 
   const getCurrentUser = async (token: string): Promise<User> => {
     if (!token) {
-      throw new Error('Token is required');
+      throw new HTTPUnauthorized('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
 
     const { data: authUser, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !authUser.user) {
-      throw new Error(`Invalid token: ${authError?.message || 'User not found'}`);
+      throw new HTTPUnauthorized('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -85,7 +90,7 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       .single();
 
     if (profileError || !profile) {
-      throw new Error(`Profile not found: ${profileError?.message || 'Unknown error'}`);
+      throw new HTTPBadRequest('No se pudo cargar el perfil del usuario. Por favor, intenta de nuevo.');
     }
 
     return mapProfileToUser(profile as Profile);

@@ -16,7 +16,10 @@ interface AuthRequest extends Request {
 const validateInput = <T>(schema: typeof registerSchema | typeof loginSchema, data: unknown): T => {
   const parsed = schema.safeParse(data);
   if (!parsed.success) {
-    throw new HTTPBadRequest('Validation failed', {
+    const errorMessages = Object.entries(parsed.error.flatten().fieldErrors)
+      .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+      .join('; ');
+    throw new HTTPBadRequest(`Datos inválidos: ${errorMessages}`, {
       error: 'Validation failed',
       details: parsed.error.flatten(),
     });
@@ -53,7 +56,7 @@ export const createAuthController = (authService: IAuthService) => {
       const credentials = validateInput<AuthCredentials>(registerSchema, req.body);
       const result = await registerUser(authService)(credentials);
       const formatted = formatAuthResult(result);
-      res.status(201).json(createApiResponse(formatted, 'User registered successfully', HttpStatusCode.CREATED));
+      res.status(201).json(createApiResponse(formatted, 'Usuario registrado exitosamente', HttpStatusCode.CREATED));
     } catch (error) {
       next(error);
     }
@@ -64,7 +67,7 @@ export const createAuthController = (authService: IAuthService) => {
       const credentials = validateInput<AuthCredentials>(loginSchema, req.body);
       const result = await loginUser(authService)(credentials);
       const formatted = formatAuthResult(result);
-      res.status(200).json(createApiResponse(formatted, 'Login successful', HttpStatusCode.OK));
+      res.status(200).json(createApiResponse(formatted, 'Sesión iniciada exitosamente', HttpStatusCode.OK));
     } catch (error) {
       next(error);
     }
@@ -73,7 +76,7 @@ export const createAuthController = (authService: IAuthService) => {
   const logoutHandler = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       await authService.logoutUser();
-      res.status(200).json(createApiResponse({ message: 'Logged out successfully' }, 'Logged out successfully', HttpStatusCode.OK));
+      res.status(200).json(createApiResponse({ message: 'Sesión cerrada' }, 'Sesión cerrada exitosamente', HttpStatusCode.OK));
     } catch (error) {
       next(error);
     }
@@ -82,10 +85,10 @@ export const createAuthController = (authService: IAuthService) => {
   const getMeHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
     try {
       if (!req.user) {
-        throw new HTTPUnauthorized('Not authenticated');
+        throw new HTTPUnauthorized('No autenticado');
       }
       const formatted = formatUser(req.user);
-      res.status(200).json(createApiResponse(formatted, 'User data retrieved', HttpStatusCode.OK));
+      res.status(200).json(createApiResponse(formatted, 'Datos de usuario obtenidos', HttpStatusCode.OK));
     } catch (error) {
       next(error);
     }
