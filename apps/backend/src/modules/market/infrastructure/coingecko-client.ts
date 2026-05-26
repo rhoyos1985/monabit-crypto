@@ -1,0 +1,122 @@
+import { ICoinGeckoClient } from '../application/ports.js';
+import { MarketOverview, CryptoData, MarketKPIs } from '../domain/types.js';
+import logger from '../../../shared/logger.js';
+
+interface CoinGeckoCrypto {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number | null;
+  market_cap: number | null;
+  market_cap_rank: number | null;
+  total_volume: number | null;
+  price_change_percentage_24h: number | null;
+  last_updated: string;
+}
+
+interface CoinGeckoGlobalData {
+  data: {
+    total_market_cap: { usd: number };
+    total_volume: { usd: number };
+    btc_dominance: number;
+    eth_dominance: number;
+    last_updated_at: number;
+  };
+}
+
+const CACHE_TTL_MS = 60000; // 60 seconds
+
+const mapCryptoData = (crypto: CoinGeckoCrypto): CryptoData => ({
+  id: crypto.id,
+  symbol: crypto.symbol.toUpperCase(),
+  name: crypto.name,
+  image: crypto.image,
+  currentPrice: crypto.current_price || 0,
+  marketCap: crypto.market_cap,
+  marketCapRank: crypto.market_cap_rank,
+  totalVolume: crypto.total_volume,
+  changePercent24h: crypto.price_change_percentage_24h,
+  lastUpdated: crypto.last_updated,
+});
+
+const mapGlobalData = (global: CoinGeckoGlobalData): MarketKPIs => ({
+  totalMarketCap: global.data.total_market_cap.usd,
+  totalVolume: global.data.total_volume.usd,
+  btcDominance: global.data.btc_dominance,
+  ethereumDominance: global.data.eth_dominance,
+  lastUpdated: new Date(global.data.last_updated_at * 1000).toISOString(),
+});
+
+export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {
+  let cachedOverview: MarketOverview | null = null;
+  let cacheExpireTime = 0;
+
+  const isCacheValid = (): boolean => {
+    return cachedOverview !== null && Date.now() < cacheExpireTime;
+  };
+
+  const fetchFromApi = async (): Promise<MarketOverview> => {
+    try {
+      const [cryptosResponse, globalResponse] = await Promise.all([
+        fetch(
+          `${apiBaseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false`
+        ),
+        fetch(`${apiBaseUrl}/global`),
+      ]);
+
+      if (!cryptosResponse.ok || !globalResponse.ok) {
+        throw new Error(
+          `CoinGecko API error: ${cryptosResponse.status} ${globalResponse.status}`
+        );
+      }
+
+      const cryptosData = (await cryptosResponse.json()) as CoinGeckoCrypto[];
+      const globalData = (await globalResponse.json()) as CoinGeckoGlobalData;
+
+      const topCryptos = cryptosData.map(mapCryptoData);
+      const marketKpis = mapGlobalData(globalData);
+      const now = new Date().toISOString();
+
+      const overview: MarketOverview = {
+        topCryptos,
+        marketKpis,
+        lastFetched: now,
+      };
+
+      cachedOverview = overview;
+      cacheExpireTime = Date.now() + CACHE_TTL_MS;
+
+      logger.info('CoinGecko API fetched successfully', {
+        cryptoCount: topCryptos.length,
+        cacheExpireTime: new Date(cacheExpireTime).toISOString(),
+      });
+
+      return overview;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('CoinGecko API fetch failed', {
+        error: errorMessage,
+        hasCachedData: cachedOverview !== null,
+      });
+
+      if (cachedOverview) {
+        logger.info('Returning stale cached data');
+        return cachedOverview;
+      }
+
+      throw error;
+    }
+  };
+
+  return {
+    getMarketOverview: async (): Promise<MarketOverview> => {
+      if (isCacheValid()) {
+        logger.debug('Returning cached market overview');
+        return cachedOverview!;
+      }
+
+      return fetchFromApi();
+    },
+  };
+};
