@@ -2,6 +2,10 @@ import React from 'react';
 import styled from 'styled-components';
 import { useAuth, useLogout } from '../../auth/application/hooks.js';
 import { useNavigate } from 'react-router-dom';
+import { useMarketOverview } from '../application/hooks.js';
+import CryptoTable from './CryptoTable.js';
+import MarketKPIs from './MarketKPIs.js';
+import PriceChangeChart from './PriceChangeChart.js';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -46,10 +50,7 @@ const LogoutButton = styled.button`
 `;
 
 const Content = styled.main`
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0;
 `;
 
 const UserText = styled.p`
@@ -58,12 +59,41 @@ const UserText = styled.p`
   font-size: 14px;
 `;
 
+const LoadingContainer = styled.div`
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  text-align: center;
+  color: ${(props) => props.theme.brandPrimary};
+`;
+
+const ErrorContainer = styled.div`
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  color: #ef4444;
+  border-left: 4px solid #ef4444;
+`;
+
+const LastUpdated = styled.div`
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+`;
+
+const SectionTitle = styled.h2`
+  color: ${(props) => props.theme.brandDark};
+  margin: 30px 0 20px 0;
+  font-size: 18px;
+`;
+
 interface DashboardPageProps {}
 
 const DashboardPage: React.FC<DashboardPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const logout = useLogout();
+  const { data: marketData, isLoading, error } = useMarketOverview();
 
   const handleLogout = async () => {
     await logout();
@@ -82,9 +112,33 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
           <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </UserInfo>
       </Header>
+
       <Content>
-        <h2>Welcome to the Dashboard</h2>
-        <p>Crypto market data coming soon...</p>
+        {isLoading && <LoadingContainer>Loading market data...</LoadingContainer>}
+
+        {error && (
+          <ErrorContainer>
+            Error loading market data: {error.message}
+          </ErrorContainer>
+        )}
+
+        {marketData && (
+          <>
+            <SectionTitle>Market Overview</SectionTitle>
+            <MarketKPIs kpis={marketData.marketKpis} />
+
+            <SectionTitle>Price Changes</SectionTitle>
+            <PriceChangeChart cryptos={marketData.topCryptos} />
+
+            <SectionTitle>Top 10 Cryptocurrencies</SectionTitle>
+            <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)' }}>
+              <CryptoTable cryptos={marketData.topCryptos} />
+              <LastUpdated style={{ padding: '10px 20px' }}>
+                Last updated: {new Date(marketData.lastFetched).toLocaleString()}
+              </LastUpdated>
+            </div>
+          </>
+        )}
       </Content>
     </Container>
   );
