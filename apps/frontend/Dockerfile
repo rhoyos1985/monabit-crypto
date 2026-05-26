@@ -34,7 +34,8 @@ COPY apps/frontend/package.json ./apps/frontend/
 # Instalar dependencias
 RUN yarn install --frozen-lockfile
 
-# Copiar código fuente
+# Copiar configuración base y código fuente
+COPY tsconfig.base.json ./
 COPY apps/frontend/tsconfig.json ./apps/frontend/
 COPY apps/frontend/vite.config.ts ./apps/frontend/
 COPY apps/frontend/index.html ./apps/frontend/

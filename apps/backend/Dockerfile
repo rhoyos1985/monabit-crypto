@@ -13,7 +13,8 @@ COPY apps/backend/package.json ./apps/backend/
 # Instalar dependencias
 RUN yarn install --frozen-lockfile
 
-# Copiar código fuente
+# Copiar configuración base y código fuente
+COPY tsconfig.base.json ./
 COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
 
