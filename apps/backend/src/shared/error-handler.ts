@@ -17,7 +17,8 @@ export const errorHandler = (
     res.status(err.statusCode).json(
       createErrorResponse(
         err.message,
-        err.statusCode as HttpStatusCode
+        err.statusCode as HttpStatusCode,
+        err.errorData
       )
     );
     return;

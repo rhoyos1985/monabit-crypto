@@ -1,11 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
+    }
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalEsm": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "ESNext"
     }
   },
   "include": ["src"],
