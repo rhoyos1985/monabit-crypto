@@ -9,10 +9,16 @@ dist/
 build/
 .next/
 out/
-*.d.ts
-*.d.ts.map
-*.js
-*.js.map
+
+# Compiled TypeScript in source directories (should not be committed)
+apps/frontend/src/**/*.d.ts
+apps/frontend/src/**/*.d.ts.map
+apps/frontend/src/**/*.js
+apps/frontend/src/**/*.js.map
+apps/backend/src/**/*.d.ts
+apps/backend/src/**/*.d.ts.map
+
+# Config files exceptions
 !vite.config.ts
 !commitlint.config.js
 
