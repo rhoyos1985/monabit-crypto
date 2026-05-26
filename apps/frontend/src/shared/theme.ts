@@ -3,6 +3,9 @@ const brandAccent = '#00B0C7';
 const brandDark = '#231F20';
 
 export const theme = {
+  brandPrimary,
+  brandAccent,
+  brandDark,
   colors: {
     brand: {
       primary: brandPrimary,

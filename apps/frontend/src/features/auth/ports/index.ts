@@ -1,0 +1,15 @@
+import type { AuthResult, LoginInput, RegisterInput, User } from '../domain/types.js';
+
+export interface IAuthRepository {
+  register(input: RegisterInput): Promise<AuthResult>;
+  login(input: LoginInput): Promise<AuthResult>;
+  logout(): Promise<void>;
+  getCurrentUser(token: string): Promise<User>;
+}
+
+export interface IAuthProvider {
+  signUpWithEmail(email: string, password: string): Promise<{ user: { id: string; email: string } }>;
+  signInWithPassword(email: string, password: string): Promise<{ session: { access_token: string } }>;
+  signOut(): Promise<void>;
+  getSession(): Promise<{ data: { session: { user: { id: string; email: string } } | null } }>;
+}

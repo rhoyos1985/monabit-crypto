@@ -1,13 +1,18 @@
+import React from 'react';
+import { Provider } from 'react-redux';
 import { ThemeProvider } from 'styled-components';
-import { theme } from '@/shared/theme';
+import { RouterProvider } from 'react-router-dom';
+import { store } from './store.js';
+import { router } from './router.js';
+import { theme } from '@/shared/theme.js';
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <div>
-        <h1>MonaBit Dashboard - Coming soon</h1>
-      </div>
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </Provider>
   );
 };
 
