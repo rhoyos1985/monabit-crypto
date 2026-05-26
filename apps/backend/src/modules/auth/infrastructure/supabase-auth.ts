@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, AuthUser } from '@supabase/supabase-js';
 import { IAuthService } from '../application/ports.js';
 import { User, AuthToken, AuthCredentials, AuthResult } from '../domain/types.js';
 import { HTTPConflict, HTTPUnauthorized, HTTPBadRequest } from '../../../shared/http-error.js';
@@ -13,6 +13,11 @@ interface Profile {
   updated_at: string;
 }
 
+interface AuthData {
+  user: AuthUser | null;
+  session: { access_token: string; refresh_token: string; expires_in: number } | null;
+}
+
 export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthService => {
   const mapProfileToUser = (profile: Profile): User => ({
     id: profile.id,
@@ -25,11 +30,15 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
   });
 
   const registerUser = async (credentials: AuthCredentials): Promise<AuthResult> => {
+    let data: AuthData;
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const response = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
       });
+
+      data = response.data as AuthData;
+      const error = response.error;
 
       if (error || !data.user || !data.session) {
         const errorMsg = error?.message || 'Error desconocido';
@@ -45,6 +54,10 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       throw new HTTPBadRequest('Error al conectar con el servicio de autenticación. Por favor, intenta de nuevo más tarde.');
     }
 
+    if (!data.session) {
+      throw new HTTPBadRequest('No se pudo obtener la sesión. Por favor, intenta de nuevo.');
+    }
+
     const user = await getCurrentUser(data.session.access_token);
 
     const token: AuthToken = {
@@ -58,11 +71,15 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
   };
 
   const loginUser = async (credentials: AuthCredentials): Promise<AuthResult> => {
+    let data: AuthData;
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const response = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
+
+      data = response.data as AuthData;
+      const error = response.error;
 
       if (error || !data.session) {
         throw new HTTPUnauthorized('Email o contraseña incorrectos. Por favor, intenta de nuevo.');
@@ -72,6 +89,10 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
         throw err;
       }
       throw new HTTPBadRequest('Error al conectar con el servicio de autenticación. Por favor, intenta de nuevo más tarde.');
+    }
+
+    if (!data.session) {
+      throw new HTTPBadRequest('No se pudo obtener la sesión. Por favor, intenta de nuevo.');
     }
 
     const user = await getCurrentUser(data.session.access_token);
