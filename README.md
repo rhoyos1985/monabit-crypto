@@ -101,20 +101,27 @@ monabit-dashboard/
 - **PLAN-DE-TRABAJO.md**: Fases de ejecución detalladas.
 - Ver secciones en el README principal una vez completadas las fases.
 
-## Fase actual
+## Fases completadas
 
-**Fase 0: Preparación y andamiaje** ✅ Completada
-- Git inicializado
-- Monorepo con yarn workspaces
+**Fase 0: Preparación y andamiaje** ✅
+- Git y monorepo con yarn workspaces
 - ESLint + Prettier + commitlint + Husky
-- Scaffolding de frontend (Vite + React 19)
-- Scaffolding de backend (Express + TypeScript)
+- Frontend (Vite + React 19) y Backend (Express + TypeScript)
 - Tema de colores (tokens de Styled Components)
 
-**Fase 0.5: Entorno de desarrollo local** ✅ Completada
-- Vía A (sin Docker): Documentación de Supabase CLI
-- Vía B (con Docker): docker-compose.yml + Dockerfiles multietapa
-  - Backend: targets `development` (ts-node hot-reload) y `production` (Node.js)
+**Fase 0.5: Entorno de desarrollo local** ✅
+- Opción A (sin Docker): Supabase CLI + yarn dev
+- Opción B (con Docker): docker-compose.yml + Dockerfiles multietapa
+  - Backend: targets `development` (ts-node) y `production` (Node.js)
   - Frontend: targets `development` (Vite HMR) y `production` (Nginx)
-  - Postgres + Supabase Auth integrados en docker-compose
-  - Health checks y volumes para hot-reload
+  - Postgres + Supabase Auth integrados
+  - Health checks y hot-reload
+
+**Fase 1: Base de datos (Supabase)** ✅
+- Esquema relacional: `profiles`, `user_preferences`, `price_alerts`
+- Row Level Security (RLS) en todas las tablas
+- Triggers automáticos al crear usuarios
+- Función de seed del admin (idempotente)
+- Documentación en `docs/modelo-de-datos.md` y `docs/setup-supabase.md`
+
+**Próxima**: Fase 2 - Backend: autenticación (register, login, OAuth Google)
