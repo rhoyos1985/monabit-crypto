@@ -9,37 +9,54 @@ import type { CityLocation } from '../../locations/domain/types.js';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: #f5f7fa;
+  background: ${(props) => props.theme.surface.background};
 `;
 
 const Header = styled.header`
   background: ${(props) => props.theme.brandPrimary};
   color: white;
-  padding: 16px 32px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  ${(props) => props.theme.media.md} {
+    padding: 16px 32px;
+  }
 `;
 
 const HeaderTitle = styled.h1`
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
   font-weight: 600;
   cursor: pointer;
+
+  ${(props) => props.theme.media.md} {
+    font-size: 20px;
+  }
 `;
 
 const Content = styled.main`
   max-width: 720px;
-  margin: 32px auto;
-  padding: 0 24px;
+  margin: 16px auto;
+  padding: 0 12px;
+
+  ${(props) => props.theme.media.md} {
+    margin: 32px auto;
+    padding: 0 24px;
+  }
 `;
 
 const Card = styled.div`
-  background: white;
+  background: ${(props) => props.theme.surface.surface};
   border-radius: 8px;
-  padding: 32px;
+  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  ${(props) => props.theme.media.md} {
+    padding: 32px;
+  }
 `;
 
 const BackButton = styled.button`
@@ -67,14 +84,18 @@ const BackButton = styled.button`
 `;
 
 const PageTitle = styled.h2`
-  font-size: 22px;
-  color: ${(props) => props.theme.brandDark};
+  font-size: 20px;
+  color: ${(props) => props.theme.surface.textPrimary};
   margin: 0 0 8px 0;
+
+  ${(props) => props.theme.media.md} {
+    font-size: 22px;
+  }
 `;
 
 const Subtitle = styled.p`
   font-size: 14px;
-  color: #666;
+  color: ${(props) => props.theme.surface.textSecondary};
   margin: 0 0 24px 0;
 `;
 
@@ -86,7 +107,12 @@ const Form = styled.form`
 
 const Row = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 12px;
+
+  ${(props) => props.theme.media.sm} {
+    flex-direction: row;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -100,26 +126,28 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: 13px;
   font-weight: 500;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
 `;
 
 const ReadOnlyHint = styled.span`
   font-size: 11px;
-  color: #999;
+  color: ${(props) => props.theme.surface.textMuted};
   font-weight: 400;
   margin-left: 8px;
 `;
 
 const Input = styled.input<{ $readOnly?: boolean }>`
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
   box-sizing: border-box;
   width: 100%;
-  background: ${(props) => (props.$readOnly ? '#f5f5f5' : 'white')};
-  color: ${(props) => (props.$readOnly ? '#666' : 'inherit')};
+  background: ${(props) =>
+    props.$readOnly ? props.theme.surface.background : props.theme.surface.inputBackground};
+  color: ${(props) =>
+    props.$readOnly ? props.theme.surface.textMuted : props.theme.surface.textPrimary};
 
   &:focus {
     outline: none;
@@ -130,16 +158,25 @@ const Input = styled.input<{ $readOnly?: boolean }>`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column-reverse;
   gap: 12px;
   margin-top: 8px;
+
+  ${(props) => props.theme.media.sm} {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   padding: 12px 24px;
-  background: ${(props) => (props.$variant === 'secondary' ? 'white' : props.theme.brandPrimary)};
-  color: ${(props) => (props.$variant === 'secondary' ? props.theme.brandDark : 'white')};
-  border: 1px solid ${(props) => (props.$variant === 'secondary' ? '#ccc' : props.theme.brandPrimary)};
+  background: ${(props) =>
+    props.$variant === 'secondary' ? props.theme.surface.surface : props.theme.brandPrimary};
+  color: ${(props) =>
+    props.$variant === 'secondary' ? props.theme.surface.textPrimary : 'white'};
+  border: 1px solid
+    ${(props) =>
+      props.$variant === 'secondary' ? props.theme.surface.border : props.theme.brandPrimary};
   border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
@@ -147,7 +184,8 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   transition: background 0.2s;
 
   &:hover:not(:disabled) {
-    background: ${(props) => (props.$variant === 'secondary' ? '#f5f5f5' : props.theme.brandAccent)};
+    background: ${(props) =>
+      props.$variant === 'secondary' ? props.theme.surface.background : props.theme.brandAccent};
   }
 
   &:disabled {

@@ -8,6 +8,7 @@ import { createAuthRouter } from './modules/auth/interfaces/router.js';
 import { createUsersRouter } from './modules/users/interfaces/router.js';
 import { createMarketRouter } from './modules/market/interfaces/router.js';
 import { createLocationsRouter } from './modules/locations/interfaces/router.js';
+import { createPreferencesRouter } from './modules/preferences/interfaces/router.js';
 import { errorHandler } from './shared/error-handler.js';
 import { swaggerSpec } from './shared/swagger.js';
 import logger from './shared/logger.js';
@@ -60,6 +61,7 @@ app.use('/auth', createAuthRouter(supabase));
 app.use('/users', createUsersRouter(supabase));
 app.use('/market', createMarketRouter(supabase));
 app.use('/locations', createLocationsRouter());
+app.use('/preferences', createPreferencesRouter(supabase));
 
 // Middleware de error (siempre al final)
 app.use(errorHandler);

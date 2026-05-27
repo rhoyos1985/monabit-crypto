@@ -2,7 +2,62 @@ const brandPrimary = '#0098BF';
 const brandAccent = '#00B0C7';
 const brandDark = '#231F20';
 
-export const theme = {
+const breakpoints = {
+  xs: '320px',
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  '2xl': '1536px',
+} as const;
+
+export const media = {
+  sm: `@media (min-width: ${breakpoints.sm})`,
+  md: `@media (min-width: ${breakpoints.md})`,
+  lg: `@media (min-width: ${breakpoints.lg})`,
+  xl: `@media (min-width: ${breakpoints.xl})`,
+  maxSm: `@media (max-width: ${breakpoints.sm})`,
+  maxMd: `@media (max-width: ${breakpoints.md})`,
+  maxLg: `@media (max-width: ${breakpoints.lg})`,
+} as const;
+
+interface ColorMode {
+  background: string;
+  surface: string;
+  surfaceElevated: string;
+  border: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  overlay: string;
+  inputBackground: string;
+}
+
+const lightMode: ColorMode = {
+  background: '#F5F7FA',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF',
+  border: '#E5E7EB',
+  textPrimary: brandDark,
+  textSecondary: '#4B5563',
+  textMuted: '#9CA3AF',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  inputBackground: '#FFFFFF',
+};
+
+const darkMode: ColorMode = {
+  background: '#0F1419',
+  surface: '#1A1F26',
+  surfaceElevated: '#242A33',
+  border: '#2F3742',
+  textPrimary: '#F5F7FA',
+  textSecondary: '#B8C0CC',
+  textMuted: '#7A8493',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+  inputBackground: '#1A1F26',
+};
+
+const baseTheme = {
   brandPrimary,
   brandAccent,
   brandDark,
@@ -66,14 +121,24 @@ export const theme = {
     lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
     xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   },
-  breakpoints: {
-    xs: '320px',
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
-  },
+  breakpoints,
+  media,
 } as const;
 
-export type Theme = typeof theme;
+export type ThemeMode = 'light' | 'dark';
+
+export const lightTheme = {
+  ...baseTheme,
+  mode: 'light' as ThemeMode,
+  surface: lightMode,
+};
+
+export const darkTheme = {
+  ...baseTheme,
+  mode: 'dark' as ThemeMode,
+  surface: darkMode,
+};
+
+export const theme = lightTheme;
+
+export type Theme = typeof lightTheme;

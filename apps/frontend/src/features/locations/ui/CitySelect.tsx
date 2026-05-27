@@ -11,12 +11,13 @@ const Wrapper = styled.div`
 const InputField = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   padding: 12px;
-  border: 1px solid ${(props) => (props.$hasError ? '#c33' : '#ccc')};
+  border: 1px solid ${(props) => (props.$hasError ? '#c33' : props.theme.surface.border)};
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
   box-sizing: border-box;
-  background: white;
+  background: ${(props) => props.theme.surface.inputBackground};
+  color: ${(props) => props.theme.surface.textPrimary};
 
   &:focus {
     outline: none;
@@ -25,7 +26,7 @@ const InputField = styled.input<{ $hasError?: boolean }>`
   }
 
   &:disabled {
-    background: #f5f5f5;
+    background: ${(props) => props.theme.surface.background};
     cursor: not-allowed;
   }
 `;
@@ -37,10 +38,10 @@ const Dropdown = styled.ul`
   right: 0;
   max-height: 240px;
   overflow-y: auto;
-  background: white;
-  border: 1px solid #ccc;
+  background: ${(props) => props.theme.surface.surfaceElevated};
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   margin: 0;
   padding: 4px 0;
   list-style: none;
@@ -51,24 +52,25 @@ const Option = styled.li<{ $highlighted?: boolean }>`
   padding: 10px 12px;
   cursor: pointer;
   font-size: 14px;
-  background: ${(props) => (props.$highlighted ? props.theme.brandAccent + '20' : 'transparent')};
+  color: ${(props) => props.theme.surface.textPrimary};
+  background: ${(props) => (props.$highlighted ? props.theme.brandAccent + '30' : 'transparent')};
 
   &:hover {
-    background: ${(props) => props.theme.brandAccent}20;
+    background: ${(props) => props.theme.brandAccent}30;
   }
 `;
 
 const EmptyState = styled.div`
   padding: 12px;
   font-size: 13px;
-  color: #999;
+  color: ${(props) => props.theme.surface.textMuted};
   text-align: center;
 `;
 
 const HelperText = styled.div`
   margin-top: 4px;
   font-size: 12px;
-  color: #999;
+  color: ${(props) => props.theme.surface.textMuted};
 `;
 
 const normalize = (value: string): string =>

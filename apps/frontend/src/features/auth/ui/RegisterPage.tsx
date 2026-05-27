@@ -10,24 +10,33 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 24px 0;
+  padding: 16px;
   background: linear-gradient(135deg, ${(props) => props.theme.brandPrimary} 0%, ${(props) => props.theme.brandAccent} 100%);
 `;
 
 const Card = styled.div`
-  background: white;
-  padding: 40px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 460px;
+
+  ${(props) => props.theme.media.sm} {
+    padding: 40px;
+  }
 `;
 
 const Title = styled.h1`
-  margin: 0 0 24px 0;
-  font-size: 26px;
-  color: ${(props) => props.theme.brandDark};
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  color: ${(props) => props.theme.surface.textPrimary};
   text-align: center;
+
+  ${(props) => props.theme.media.sm} {
+    font-size: 26px;
+    margin: 0 0 24px 0;
+  }
 `;
 
 const Form = styled.form`
@@ -38,7 +47,12 @@ const Form = styled.form`
 
 const Row = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 12px;
+
+  ${(props) => props.theme.media.sm} {
+    flex-direction: row;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -52,17 +66,19 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: 13px;
   font-weight: 500;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
 `;
 
 const Input = styled.input`
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
   box-sizing: border-box;
   width: 100%;
+  background: ${(props) => props.theme.surface.inputBackground};
+  color: ${(props) => props.theme.surface.textPrimary};
 
   &:focus {
     outline: none;
@@ -96,14 +112,14 @@ const Divider = styled.div`
   display: flex;
   align-items: center;
   margin: 16px 0;
-  color: #999;
+  color: ${(props) => props.theme.surface.textMuted};
   font-size: 12px;
 
   &::before,
   &::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid ${(props) => props.theme.surface.border};
   }
 
   &::before {
@@ -117,9 +133,9 @@ const Divider = styled.div`
 
 const GoogleButton = styled.button`
   padding: 12px;
-  background: white;
-  color: #3c4043;
-  border: 1px solid #dadce0;
+  background: ${(props) => props.theme.surface.surface};
+  color: ${(props) => props.theme.surface.textPrimary};
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
@@ -132,7 +148,7 @@ const GoogleButton = styled.button`
   transition: background 0.2s, box-shadow 0.2s;
 
   &:hover:not(:disabled) {
-    background: #f8f9fa;
+    background: ${(props) => props.theme.surface.background};
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
@@ -180,7 +196,7 @@ const LinkText = styled.p`
   text-align: center;
   margin: 18px 0 0 0;
   font-size: 14px;
-  color: #666;
+  color: ${(props) => props.theme.surface.textSecondary};
 
   a {
     color: ${(props) => props.theme.brandPrimary};

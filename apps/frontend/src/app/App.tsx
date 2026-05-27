@@ -1,12 +1,11 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { ThemeProvider } from 'styled-components';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './store.js';
 import { router } from './router.js';
-import { theme } from '@/shared/theme.js';
 import { ToastProvider } from '../shared/ui/Toast/ToastProvider.js';
+import AppThemeProvider from '../features/preferences/ui/AppThemeProvider.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,11 +20,11 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
+        <AppThemeProvider>
           <ToastProvider>
             <RouterProvider router={router} future={{ v7_startTransition: true }} />
           </ToastProvider>
-        </ThemeProvider>
+        </AppThemeProvider>
       </QueryClientProvider>
     </Provider>
   );

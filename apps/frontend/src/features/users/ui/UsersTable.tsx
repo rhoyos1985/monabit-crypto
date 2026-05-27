@@ -2,30 +2,40 @@ import React from 'react';
 import styled from 'styled-components';
 import type { User, UserRole } from '../domain/types.js';
 
+const TableWrapper = styled.div`
+  width: 100%;
+  background: ${(props) => props.theme.surface.surface};
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+`;
+
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  min-width: 720px;
 `;
 
 const HeaderCell = styled.th`
-  background: #f5f5f5;
+  background: ${(props) => props.theme.surface.background};
   padding: 12px;
   text-align: left;
   font-weight: 600;
   border-bottom: 2px solid ${(props) => props.theme.brandPrimary};
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
+  white-space: nowrap;
 `;
 
 const BodyCell = styled.td`
   padding: 12px;
-  border-bottom: 1px solid #eee;
-  color: #333;
+  border-bottom: 1px solid ${(props) => props.theme.surface.border};
+  color: ${(props) => props.theme.surface.textPrimary};
 `;
 
 const BodyRow = styled.tr`
   &:hover {
-    background: #f9f9f9;
+    background: ${(props) => props.theme.surface.background};
   }
 `;
 
@@ -85,48 +95,50 @@ interface UsersTableProps {
 
 const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDeactivate, isDeactivating }) => {
   return (
-    <Table>
-      <thead>
-        <tr>
-          <HeaderCell>Email</HeaderCell>
-          <HeaderCell>Nombre</HeaderCell>
-          <HeaderCell>Ciudad</HeaderCell>
-          <HeaderCell>Rol</HeaderCell>
-          <HeaderCell>Estado</HeaderCell>
-          <HeaderCell>Creado</HeaderCell>
-          <HeaderCell>Acciones</HeaderCell>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <BodyRow key={user.id}>
-            <BodyCell>{user.email}</BodyCell>
-            <BodyCell>{[user.firstName, user.lastName].filter(Boolean).join(' ') || '-'}</BodyCell>
-            <BodyCell>{user.city ? `${user.city}, ${user.state ?? ''}` : '-'}</BodyCell>
-            <BodyCell>
-              <RoleBadge $role={user.role}>{user.role.toUpperCase()}</RoleBadge>
-            </BodyCell>
-            <BodyCell>
-              <StatusBadge $isActive={user.isActive}>
-                {user.isActive ? 'ACTIVE' : 'INACTIVE'}
-              </StatusBadge>
-            </BodyCell>
-            <BodyCell>{new Date(user.createdAt).toLocaleDateString()}</BodyCell>
-            <BodyCell>
-              <ActionButton onClick={() => onEdit(user)}>Edit</ActionButton>
-              {user.isActive && (
-                <DangerButton
-                  onClick={() => onDeactivate(user.id)}
-                  disabled={isDeactivating}
-                >
-                  {isDeactivating ? 'Deactivating...' : 'Deactivate'}
-                </DangerButton>
-              )}
-            </BodyCell>
-          </BodyRow>
-        ))}
-      </tbody>
-    </Table>
+    <TableWrapper>
+      <Table>
+        <thead>
+          <tr>
+            <HeaderCell>Email</HeaderCell>
+            <HeaderCell>Nombre</HeaderCell>
+            <HeaderCell>Ciudad</HeaderCell>
+            <HeaderCell>Rol</HeaderCell>
+            <HeaderCell>Estado</HeaderCell>
+            <HeaderCell>Creado</HeaderCell>
+            <HeaderCell>Acciones</HeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <BodyRow key={user.id}>
+              <BodyCell>{user.email}</BodyCell>
+              <BodyCell>{[user.firstName, user.lastName].filter(Boolean).join(' ') || '-'}</BodyCell>
+              <BodyCell>{user.city ? `${user.city}, ${user.state ?? ''}` : '-'}</BodyCell>
+              <BodyCell>
+                <RoleBadge $role={user.role}>{user.role.toUpperCase()}</RoleBadge>
+              </BodyCell>
+              <BodyCell>
+                <StatusBadge $isActive={user.isActive}>
+                  {user.isActive ? 'ACTIVO' : 'INACTIVO'}
+                </StatusBadge>
+              </BodyCell>
+              <BodyCell>{new Date(user.createdAt).toLocaleDateString('es-CO')}</BodyCell>
+              <BodyCell>
+                <ActionButton onClick={() => onEdit(user)}>Editar</ActionButton>
+                {user.isActive && (
+                  <DangerButton
+                    onClick={() => onDeactivate(user.id)}
+                    disabled={isDeactivating}
+                  >
+                    {isDeactivating ? 'Desactivando...' : 'Desactivar'}
+                  </DangerButton>
+                )}
+              </BodyCell>
+            </BodyRow>
+          ))}
+        </tbody>
+      </Table>
+    </TableWrapper>
   );
 };
 

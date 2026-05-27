@@ -4,22 +4,37 @@ import type { MarketKPIs } from '../domain/types.js';
 
 const Container = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  ${(props) => props.theme.media.sm} {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  ${(props) => props.theme.media.lg} {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+  }
 `;
 
 const Card = styled.div`
-  background: white;
-  padding: 20px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid ${(props) => props.theme.brandPrimary};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  ${(props) => props.theme.media.md} {
+    padding: 20px;
+  }
 `;
 
 const Label = styled.div`
-  font-size: 12px;
-  color: #999;
+  font-size: 11px;
+  color: ${(props) => props.theme.surface.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -27,9 +42,13 @@ const Label = styled.div`
 `;
 
 const Value = styled.div`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
+
+  ${(props) => props.theme.media.md} {
+    font-size: 24px;
+  }
 `;
 
 const formatLargeNumber = (num: number): string => {
@@ -47,19 +66,19 @@ const MarketKPIsComponent: React.FC<MarketKPIsProps> = ({ kpis }) => {
   return (
     <Container>
       <Card>
-        <Label>Total Market Cap</Label>
+        <Label>Capitalización total</Label>
         <Value>{formatLargeNumber(kpis.totalMarketCap)}</Value>
       </Card>
       <Card>
-        <Label>Total 24h Volume</Label>
+        <Label>Volumen 24h</Label>
         <Value>{formatLargeNumber(kpis.totalVolume)}</Value>
       </Card>
       <Card>
-        <Label>Bitcoin Dominance</Label>
+        <Label>Dominancia BTC</Label>
         <Value>{kpis.btcDominance.toFixed(2)}%</Value>
       </Card>
       <Card>
-        <Label>Ethereum Dominance</Label>
+        <Label>Dominancia ETH</Label>
         <Value>{kpis.ethereumDominance.toFixed(2)}%</Value>
       </Card>
     </Container>

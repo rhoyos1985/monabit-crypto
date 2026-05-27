@@ -5,16 +5,20 @@ import CitySelect from '../../locations/ui/CitySelect.js';
 import type { CityLocation } from '../../locations/domain/types.js';
 
 const FormContainer = styled.div`
-  background: white;
-  padding: 20px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border: 1px solid #eee;
+  border: 1px solid ${(props) => props.theme.surface.border};
+
+  ${(props) => props.theme.media.md} {
+    padding: 20px;
+  }
 `;
 
 const Title = styled.h3`
   margin: 0 0 20px 0;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
   font-size: 16px;
 `;
 
@@ -40,15 +44,17 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: 14px;
   font-weight: 500;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
 `;
 
 const Input = styled.input`
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
+  background: ${(props) => props.theme.surface.inputBackground};
+  color: ${(props) => props.theme.surface.textPrimary};
 
   &:focus {
     outline: none;
@@ -59,10 +65,12 @@ const Input = styled.input`
 
 const Select = styled.select`
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid ${(props) => props.theme.surface.border};
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
+  background: ${(props) => props.theme.surface.inputBackground};
+  color: ${(props) => props.theme.surface.textPrimary};
 
   &:focus {
     outline: none;

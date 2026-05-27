@@ -1,19 +1,24 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { CryptoData } from '../domain/types.js';
 
 const Container = styled.div`
-  background: white;
-  padding: 20px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+
+  ${(props) => props.theme.media.md} {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
 `;
 
 const Title = styled.h3`
-  margin: 0 0 20px 0;
-  color: ${(props) => props.theme.brandDark};
+  margin: 0 0 16px 0;
+  color: ${(props) => props.theme.surface.textPrimary};
   font-size: 16px;
 `;
 
@@ -22,6 +27,7 @@ interface PriceChangeChartProps {
 }
 
 const PriceChangeChart: React.FC<PriceChangeChartProps> = ({ cryptos }) => {
+  const theme = useTheme();
   const data = cryptos.map((crypto) => ({
     symbol: crypto.symbol.toUpperCase(),
     change: crypto.changePercent24h ?? 0,
@@ -29,22 +35,27 @@ const PriceChangeChart: React.FC<PriceChangeChartProps> = ({ cryptos }) => {
 
   return (
     <Container>
-      <Title>24h Price Change (%)</Title>
-      <ResponsiveContainer width="100%" height={300}>
+      <Title>Variación 24h (%)</Title>
+      <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="symbol" />
-          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.surface.border} />
+          <XAxis dataKey="symbol" stroke={theme.surface.textSecondary} />
+          <YAxis stroke={theme.surface.textSecondary} />
           <Tooltip
             formatter={(value: number) => `${value.toFixed(2)}%`}
-            contentStyle={{ backgroundColor: '#fff', border: `1px solid ${document.documentElement.style.getPropertyValue('--brand-primary') || '#0098BF'}` }}
+            contentStyle={{
+              backgroundColor: theme.surface.surfaceElevated,
+              border: `1px solid ${theme.surface.border}`,
+              color: theme.surface.textPrimary,
+            }}
+            labelStyle={{ color: theme.surface.textPrimary }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: theme.surface.textSecondary }} />
           <Bar
             dataKey="change"
-            fill="#0098BF"
+            fill={theme.brandPrimary}
             radius={[4, 4, 0, 0]}
-            name="Change %"
+            name="Variación %"
           />
         </BarChart>
       </ResponsiveContainer>

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/application/hooks.js';
 import { useMarketOverview } from '../application/hooks.js';
+import { usePreferences } from '../../preferences/application/hooks.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
 import CryptoTable from './CryptoTable.js';
 import MarketKPIs from './MarketKPIs.js';
@@ -10,31 +11,51 @@ import PriceChangeChart from './PriceChangeChart.js';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: #f5f5f5;
-  padding: 20px;
+  background: ${(props) => props.theme.surface.background};
+  padding: 12px;
+
+  ${(props) => props.theme.media.md} {
+    padding: 20px;
+  }
 `;
 
 const Header = styled.header`
-  background: white;
-  padding: 20px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 14px 16px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  ${(props) => props.theme.media.md} {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
 `;
 
 const Title = styled.h1`
   margin: 0;
-  color: ${(props) => props.theme.brandDark};
+  color: ${(props) => props.theme.surface.textPrimary};
   cursor: pointer;
+  font-size: 18px;
+
+  ${(props) => props.theme.media.md} {
+    font-size: 22px;
+  }
 `;
 
 const UserInfo = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 8px;
   align-items: center;
+
+  ${(props) => props.theme.media.md} {
+    gap: 16px;
+  }
 `;
 
 const NavLink = styled(Link)`
@@ -55,7 +76,7 @@ const Content = styled.main`
 `;
 
 const LoadingContainer = styled.div`
-  background: white;
+  background: ${(props) => props.theme.surface.surface};
   padding: 40px;
   border-radius: 8px;
   text-align: center;
@@ -63,7 +84,7 @@ const LoadingContainer = styled.div`
 `;
 
 const ErrorContainer = styled.div`
-  background: white;
+  background: ${(props) => props.theme.surface.surface};
   padding: 40px;
   border-radius: 8px;
   color: #ef4444;
@@ -72,14 +93,19 @@ const ErrorContainer = styled.div`
 
 const LastUpdated = styled.div`
   font-size: 12px;
-  color: #999;
+  color: ${(props) => props.theme.surface.textMuted};
   margin-top: 10px;
 `;
 
 const SectionTitle = styled.h2`
-  color: ${(props) => props.theme.brandDark};
-  margin: 30px 0 20px 0;
-  font-size: 18px;
+  color: ${(props) => props.theme.surface.textPrimary};
+  margin: 24px 0 16px 0;
+  font-size: 16px;
+
+  ${(props) => props.theme.media.md} {
+    margin: 30px 0 20px 0;
+    font-size: 18px;
+  }
 `;
 
 interface DashboardPageProps {}
@@ -88,6 +114,14 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: marketData, isLoading, error } = useMarketOverview();
+  const { data: preferences } = usePreferences();
+
+  const favoriteCryptos = useMemo(() => {
+    if (!marketData || !preferences || preferences.favoriteCoins.length === 0) {
+      return [];
+    }
+    return marketData.topCryptos.filter((c) => preferences.favoriteCoins.includes(c.id));
+  }, [marketData, preferences]);
 
   return (
     <Container>
@@ -100,29 +134,34 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
       </Header>
 
       <Content>
-        {isLoading && <LoadingContainer>Loading market data...</LoadingContainer>}
+        {isLoading && <LoadingContainer>Cargando datos del mercado...</LoadingContainer>}
 
         {error && (
           <ErrorContainer>
-            Error loading market data: {error.message}
+            Error al cargar datos del mercado: {error.message}
           </ErrorContainer>
         )}
 
         {marketData && (
           <>
-            <SectionTitle>Market Overview</SectionTitle>
+            <SectionTitle>Indicadores del mercado</SectionTitle>
             <MarketKPIs kpis={marketData.marketKpis} />
 
-            <SectionTitle>Price Changes</SectionTitle>
+            {favoriteCryptos.length > 0 && (
+              <>
+                <SectionTitle>Tus favoritas ★</SectionTitle>
+                <CryptoTable cryptos={favoriteCryptos} />
+              </>
+            )}
+
+            <SectionTitle>Variación 24h</SectionTitle>
             <PriceChangeChart cryptos={marketData.topCryptos} />
 
-            <SectionTitle>Top 10 Cryptocurrencies</SectionTitle>
-            <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)' }}>
-              <CryptoTable cryptos={marketData.topCryptos} />
-              <LastUpdated style={{ padding: '10px 20px' }}>
-                Last updated: {new Date(marketData.lastFetched).toLocaleString()}
-              </LastUpdated>
-            </div>
+            <SectionTitle>Top 10 criptomonedas</SectionTitle>
+            <CryptoTable cryptos={marketData.topCryptos} />
+            <LastUpdated>
+              Última actualización: {new Date(marketData.lastFetched).toLocaleString('es-CO')}
+            </LastUpdated>
           </>
         )}
       </Content>

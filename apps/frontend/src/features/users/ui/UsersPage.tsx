@@ -10,42 +10,66 @@ import { useToast } from '../../../shared/ui/Toast/ToastProvider.js';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: #f5f7fa;
+  background: ${(props) => props.theme.surface.background};
 `;
 
 const Header = styled.header`
-  background: white;
-  padding: 16px 24px;
+  background: ${(props) => props.theme.surface.surface};
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  ${(props) => props.theme.media.md} {
+    padding: 16px 24px;
+  }
 `;
 
 const HeaderTitle = styled.h1`
   margin: 0;
-  color: ${(props) => props.theme.brandDark};
-  font-size: 20px;
+  color: ${(props) => props.theme.surface.textPrimary};
+  font-size: 18px;
   cursor: pointer;
+
+  ${(props) => props.theme.media.md} {
+    font-size: 20px;
+  }
 `;
 
 const PageContainer = styled.div`
-  padding: 24px;
+  padding: 16px;
   max-width: 1200px;
   margin: 0 auto;
+
+  ${(props) => props.theme.media.md} {
+    padding: 24px;
+  }
 `;
 
 const PageHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  ${(props) => props.theme.media.sm} {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
 `;
 
 const Title = styled.h2`
   margin: 0;
-  color: ${(props) => props.theme.brandDark};
-  font-size: 22px;
+  color: ${(props) => props.theme.surface.textPrimary};
+  font-size: 20px;
+
+  ${(props) => props.theme.media.md} {
+    font-size: 22px;
+  }
 `;
 
 const AddUserButton = styled.button`
