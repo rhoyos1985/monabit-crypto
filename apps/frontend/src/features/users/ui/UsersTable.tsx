@@ -29,22 +29,22 @@ const BodyRow = styled.tr`
   }
 `;
 
-const RoleBadge = styled.span<{ role: 'admin' | 'user' }>`
+const RoleBadge = styled.span<{ $role: 'admin' | 'user' }>`
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
-  background: ${(props) => (props.role === 'admin' ? '#fee5e7' : '#e3f2fd')};
-  color: ${(props) => (props.role === 'admin' ? '#c3185b' : '#1565c0')};
+  background: ${(props) => (props.$role === 'admin' ? '#fee5e7' : '#e3f2fd')};
+  color: ${(props) => (props.$role === 'admin' ? '#c3185b' : '#1565c0')};
 `;
 
-const StatusBadge = styled.span<{ isActive: boolean }>`
+const StatusBadge = styled.span<{ $isActive: boolean }>`
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
-  background: ${(props) => (props.isActive ? '#e8f5e9' : '#ffebee')};
-  color: ${(props) => (props.isActive ? '#2e7d32' : '#c62828')};
+  background: ${(props) => (props.$isActive ? '#e8f5e9' : '#ffebee')};
+  color: ${(props) => (props.$isActive ? '#2e7d32' : '#c62828')};
 `;
 
 const ActionButton = styled.button`
@@ -104,10 +104,10 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDeactivate, is
             <BodyCell>{[user.firstName, user.lastName].filter(Boolean).join(' ') || '-'}</BodyCell>
             <BodyCell>{user.city ? `${user.city}, ${user.state ?? ''}` : '-'}</BodyCell>
             <BodyCell>
-              <RoleBadge role={user.role}>{user.role.toUpperCase()}</RoleBadge>
+              <RoleBadge $role={user.role}>{user.role.toUpperCase()}</RoleBadge>
             </BodyCell>
             <BodyCell>
-              <StatusBadge isActive={user.isActive}>
+              <StatusBadge $isActive={user.isActive}>
                 {user.isActive ? 'ACTIVE' : 'INACTIVE'}
               </StatusBadge>
             </BodyCell>

@@ -41,8 +41,8 @@ const CryptoImage = styled.img`
   border-radius: 50%;
 `;
 
-const PriceChange = styled.span<{ isPositive: boolean }>`
-  color: ${(props) => (props.isPositive ? '#10B981' : '#EF4444')};
+const PriceChange = styled.span<{ $isPositive: boolean }>`
+  color: ${(props) => (props.$isPositive ? '#10B981' : '#EF4444')};
   font-weight: 600;
 `;
 
@@ -94,7 +94,7 @@ const CryptoTable: React.FC<CryptoTableProps> = ({ cryptos }) => {
             </BodyCell>
             <BodyCell>{formatPrice(crypto.currentPrice)}</BodyCell>
             <BodyCell>
-              <PriceChange isPositive={(crypto.changePercent24h ?? 0) >= 0}>
+              <PriceChange $isPositive={(crypto.changePercent24h ?? 0) >= 0}>
                 {crypto.changePercent24h !== null ? `${crypto.changePercent24h.toFixed(2)}%` : 'N/A'}
               </PriceChange>
             </BodyCell>
