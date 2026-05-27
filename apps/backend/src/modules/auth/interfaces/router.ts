@@ -8,7 +8,7 @@
 import { Router, RequestHandler } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseAuthService } from '../infrastructure/supabase-auth.js';
-import { createAuthController } from '../application/controller.js';
+import { createAuthController } from './controller.js';
 import { createRequireAuthMiddleware } from './middleware.js';
 
 export const createAuthRouter = (supabase: SupabaseClient): Router => {

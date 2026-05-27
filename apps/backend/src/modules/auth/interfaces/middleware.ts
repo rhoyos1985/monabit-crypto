@@ -40,31 +40,33 @@ export const createRequireAuthMiddleware =
       throw new HTTPUnauthorized('Invalid or expired token');
     }
 
-    const { data: profileData, error: profileError } = await supabase
+    const profileResult = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authUser.user.id)
-      .single();
+      .single<Profile>();
+
+    const profileData = profileResult.data;
+    const profileError = profileResult.error;
 
     if (profileError || !profileData) {
       throw new HTTPUnauthorized('User profile not found');
     }
 
-    const typedProfile = profileData as Profile;
     const user: User = {
-      id: typedProfile.id,
-      email: typedProfile.email,
-      firstName: typedProfile.first_name || undefined,
-      lastName: typedProfile.last_name || undefined,
-      city: typedProfile.city || undefined,
-      state: typedProfile.state || undefined,
-      country: typedProfile.country || undefined,
-      avatarUrl: typedProfile.avatar_url || undefined,
-      authProvider: typedProfile.auth_provider || 'email',
-      role: (typedProfile.role || 'user') as 'admin' | 'user',
-      isActive: typedProfile.is_active,
-      createdAt: new Date(typedProfile.created_at),
-      updatedAt: new Date(typedProfile.updated_at),
+      id: profileData.id,
+      email: profileData.email,
+      firstName: profileData.first_name || undefined,
+      lastName: profileData.last_name || undefined,
+      city: profileData.city || undefined,
+      state: profileData.state || undefined,
+      country: profileData.country || undefined,
+      avatarUrl: profileData.avatar_url || undefined,
+      authProvider: profileData.auth_provider || 'email',
+      role: (profileData.role || 'user') as 'admin' | 'user',
+      isActive: profileData.is_active,
+      createdAt: new Date(profileData.created_at),
+      updatedAt: new Date(profileData.updated_at),
     };
 
     req.user = user;

@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthCredentials } from '../domain/types.js';
-import { registerSchema, loginSchema, authResultResponseSchema, userResponseSchema } from '../interfaces/schemas.js';
-import { IAuthService } from './ports.js';
-import { registerUser, loginUser } from './use-cases.js';
+import { registerSchema, loginSchema, authResultResponseSchema, userResponseSchema } from './schemas.js';
+import { IAuthService } from '../application/ports.js';
+import { registerUser, loginUser } from '../application/use-cases.js';
 import { HTTPBadRequest, HTTPUnauthorized } from '../../../shared/http-error.js';
 import { User } from '../domain/types.js';
 import { createApiResponse } from '../../../shared/api-response.js';

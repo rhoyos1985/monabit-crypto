@@ -140,11 +140,14 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       throw new HTTPUnauthorized('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const profileResult = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authUser.user.id)
-      .single();
+      .single<Profile>();
+
+    const profile = profileResult.data;
+    const profileError = profileResult.error;
 
     if (profileError || !profile) {
       logger.error('Failed to load user profile', {
@@ -157,7 +160,7 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       throw new HTTPBadRequest('No se pudo cargar el perfil del usuario. Por favor, intenta de nuevo.');
     }
 
-    return mapProfileToUser(profile as Profile);
+    return mapProfileToUser(profile);
   };
 
   const logoutUser = async (): Promise<void> => {
