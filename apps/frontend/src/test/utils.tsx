@@ -1,0 +1,62 @@
+import React, { ReactElement } from 'react';
+import { render, RenderOptions } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { ThemeProvider } from 'styled-components';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+import sessionReducer, { SessionState } from '../app/slices/session.js';
+import { lightTheme } from '../shared/theme.js';
+
+interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
+  preloadedSession?: Partial<SessionState>;
+  route?: string;
+}
+
+export const buildTestStore = (preloadedSession?: Partial<SessionState>) =>
+  configureStore({
+    reducer: { session: sessionReducer },
+    preloadedState: preloadedSession
+      ? {
+          session: {
+            user: null,
+            token: null,
+            isLoading: false,
+            error: null,
+            ...preloadedSession,
+          },
+        }
+      : undefined,
+  });
+
+export const buildTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+
+export const renderWithProviders = (
+  ui: ReactElement,
+  { preloadedSession, route = '/', ...options }: RenderWithProvidersOptions = {}
+) => {
+  const store = buildTestStore(preloadedSession);
+  const queryClient = buildTestQueryClient();
+
+  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={lightTheme}>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </Provider>
+  );
+
+  return {
+    store,
+    queryClient,
+    ...render(ui, { wrapper: Wrapper, ...options }),
+  };
+};
