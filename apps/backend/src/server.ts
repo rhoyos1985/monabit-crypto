@@ -12,6 +12,7 @@ import { errorHandler } from './shared/error-handler.js';
 import { swaggerSpec } from './shared/swagger.js';
 import logger from './shared/logger.js';
 import { runMigrations } from './shared/migrations.js';
+import seedAdmin from './shared/seed-admin.js';
 
 dotenv.config();
 
@@ -67,6 +68,11 @@ app.use(errorHandler);
 const start = async (): Promise<void> => {
   try {
     await runMigrations(supabase);
+
+    const adminEmail = process.env.SEED_ADMIN_EMAIL ?? '';
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? '';
+    await seedAdmin(supabase, adminEmail, adminPassword);
+
     app.listen(PORT, () => {
       logger.info(`Backend running on port ${PORT}`);
     });

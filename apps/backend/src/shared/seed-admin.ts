@@ -1,39 +1,103 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import logger from './logger.js';
 
+interface ExistingProfile {
+  id: string;
+  email: string;
+  role: 'admin' | 'user';
+}
+
 /**
- * Seed el usuario admin inicial de manera idempotente.
- * Si el admin ya existe, no lo modifica.
+ * Seed del usuario admin inicial. Idempotente:
+ * - Si ya existe con rol admin: no hace nada.
+ * - Si existe con rol user: lo promueve a admin.
+ * - Si no existe: lo crea (auth.users + promoción del profile a admin).
+ *
+ * Requiere que `supabase` esté inicializado con la service_role key.
  */
-const seedAdmin = async (supabase: SupabaseClient, adminEmail: string, _adminPassword: string): Promise<void> => {
+const seedAdmin = async (
+  supabase: SupabaseClient,
+  adminEmail: string,
+  adminPassword: string
+): Promise<void> => {
+  if (!adminEmail || !adminPassword) {
+    logger.warn('[SEED] SEED_ADMIN_EMAIL o SEED_ADMIN_PASSWORD no están definidos, se omite seed');
+    return;
+  }
+
   try {
-    // Verificar si el admin ya existe
-    const { data: existingAdmin } = await supabase
+    const existingResult = await supabase
       .from('profiles')
       .select('id, email, role')
       .eq('email', adminEmail)
-      .single();
+      .maybeSingle<ExistingProfile>();
 
-    if (existingAdmin) {
-      logger.info(`[SEED] Admin user ${adminEmail} ya existe con rol: ${existingAdmin.role}`);
+    const existingProfile = existingResult.data;
+
+    if (existingProfile) {
+      if (existingProfile.role === 'admin') {
+        logger.info('[SEED] Usuario admin ya existe, omitiendo creación', { email: adminEmail });
+        return;
+      }
+
+      const { error: promoteError } = await supabase
+        .from('profiles')
+        .update({ role: 'admin', updated_at: new Date().toISOString() })
+        .eq('id', existingProfile.id);
+
+      if (promoteError) {
+        logger.error('[SEED] No se pudo promover usuario existente a admin', {
+          email: adminEmail,
+          error: promoteError.message,
+        });
+        return;
+      }
+
+      logger.info('[SEED] Usuario existente promovido a admin', { email: adminEmail });
       return;
     }
 
-    // Crear usuario admin a través de Supabase Auth
-    // NOTA: Esto requiere estar usando supabase-js con admin SDK
-    // El servicio de Auth debe estar configurado para permitir crear usuarios
-    logger.info(`[SEED] Creando usuario admin: ${adminEmail}`);
+    const { data: created, error: createError } = await supabase.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true,
+      user_metadata: {
+        first_name: 'Administrador',
+        last_name: 'MonaBit',
+      },
+    });
 
-    // IMPORTANTE: Este es un placeholder. En producción:
-    // 1. Usar el cliente Supabase con service_role key
-    // 2. Crear el usuario con signUp
-    // 3. Actualizar el rol a 'admin' en la tabla profiles
-    // 4. Esto se hace en el backend al iniciar, no en el cliente
+    if (createError || !created.user) {
+      logger.error('[SEED] No se pudo crear el usuario admin', {
+        email: adminEmail,
+        error: createError?.message ?? 'usuario nulo',
+      });
+      return;
+    }
 
-    logger.info(`[SEED] Seed del admin completado`);
+    const { error: roleError } = await supabase
+      .from('profiles')
+      .update({ role: 'admin', updated_at: new Date().toISOString() })
+      .eq('id', created.user.id);
+
+    if (roleError) {
+      logger.error('[SEED] Usuario admin creado pero no se pudo asignar rol admin', {
+        email: adminEmail,
+        userId: created.user.id,
+        error: roleError.message,
+      });
+      return;
+    }
+
+    logger.info('[SEED] Usuario admin creado exitosamente', {
+      email: adminEmail,
+      userId: created.user.id,
+    });
   } catch (error) {
-    logger.error('[SEED] Error al crear admin:', error);
-    // No lanzar error; dejar que continúe la app
+    logger.error('[SEED] Error inesperado al ejecutar seed del admin', {
+      email: adminEmail,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 };
 
