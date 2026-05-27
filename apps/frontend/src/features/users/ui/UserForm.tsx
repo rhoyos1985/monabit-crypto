@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import type { User } from '../domain/types.js';
+import CitySelect from '../../locations/ui/CitySelect.js';
+import type { CityLocation } from '../../locations/domain/types.js';
 
 const FormContainer = styled.div`
   background: white;
@@ -116,6 +118,9 @@ interface UserFormSubmitInput {
   email: string;
   firstName: string;
   lastName: string;
+  city?: string;
+  state?: string;
+  country?: string;
   password: string;
   role: 'admin' | 'user';
 }
@@ -138,6 +143,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [location, setLocation] = useState<CityLocation | null>(null);
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'user'>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,6 +154,16 @@ const UserForm: React.FC<UserFormProps> = ({
       setFirstName(initialUser.firstName || '');
       setLastName(initialUser.lastName || '');
       setRole(initialUser.role);
+      if (initialUser.city && initialUser.state && initialUser.country) {
+        setLocation({
+          city: initialUser.city,
+          state: initialUser.state,
+          country: initialUser.country,
+          label: `${initialUser.city} - ${initialUser.state} - ${initialUser.country}`,
+        });
+      } else {
+        setLocation(null);
+      }
     }
   }, [initialUser]);
 
@@ -155,10 +171,20 @@ const UserForm: React.FC<UserFormProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit({ email, firstName, lastName, password, role });
+      await onSubmit({
+        email,
+        firstName,
+        lastName,
+        city: location?.city,
+        state: location?.state,
+        country: location?.country,
+        password,
+        role,
+      });
       setEmail('');
       setFirstName('');
       setLastName('');
+      setLocation(null);
       setPassword('');
       setRole('user');
     } finally {
@@ -222,6 +248,17 @@ const UserForm: React.FC<UserFormProps> = ({
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>
           </Select>
+        </FormGroup>
+
+        <FormGroup style={{ gridColumn: '1 / -1' }}>
+          <Label htmlFor="city">Ciudad</Label>
+          <CitySelect
+            id="city"
+            value={location}
+            onChange={setLocation}
+            disabled={isLoading || isSubmitting}
+            placeholder="Ej. Cartagena - Bolivar - Colombia"
+          />
         </FormGroup>
 
         {!initialUser && (

@@ -83,6 +83,9 @@ interface UserFormInput {
   email: string;
   firstName: string;
   lastName: string;
+  city?: string;
+  state?: string;
+  country?: string;
   password: string;
   role: 'admin' | 'user';
 }
@@ -134,6 +137,9 @@ const UsersPage: React.FC = () => {
           input: {
             firstName: input.firstName,
             lastName: input.lastName,
+            city: input.city,
+            state: input.state,
+            country: input.country,
           },
         },
         {
