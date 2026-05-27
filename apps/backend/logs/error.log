@@ -1,9 +1,0 @@
-{"error":"CoinGecko down","hasCachedData":true,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:43:13"}
-{"error":"Network error","hasCachedData":false,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:41:13"}
-{"error":"Network down","hasCachedData":false,"level":"error","message":"Failed to fetch cities from API-Colombia","timestamp":"2026-05-27 13:41:13"}
-{"error":"Network down","hasCachedData":false,"level":"error","message":"Failed to fetch cities from API-Colombia","timestamp":"2026-05-27 13:41:50"}
-{"error":"CoinGecko down","hasCachedData":true,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:43:50"}
-{"error":"Network error","hasCachedData":false,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:41:50"}
-{"error":"CoinGecko down","hasCachedData":true,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:46:50"}
-{"error":"Network down","hasCachedData":false,"level":"error","message":"Failed to fetch cities from API-Colombia","timestamp":"2026-05-27 13:44:50"}
-{"error":"Network error","hasCachedData":false,"level":"error","message":"CoinGecko API fetch failed","timestamp":"2026-05-27 13:44:50"}

@@ -59,3 +59,13 @@ coverage/
 supabase/.branches/
 supabase/.temp/
 supabase/snippets/
+
+# Logs en desarrollo
+logs/
+*.log
+
+# Local settings
+.claude/settings.json
+
+# Coverage reports
+coverage/
