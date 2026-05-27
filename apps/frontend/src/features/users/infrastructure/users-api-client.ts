@@ -1,15 +1,6 @@
 import type { User, CreateUserInput, UpdateUserInput } from '../domain/types.js';
 import type { IUserRepository } from '../ports/index.js';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const env = import.meta.env as any;
-
-const getApiBaseUrl = (): string => {
-  if (typeof window === 'undefined') {
-    return 'http://localhost:8080';
-  }
-  return env.VITE_API_BASE_URL || 'http://localhost:8080';
-};
+import { API_BASE_URL } from '../../../shared/config.js';
 
 interface ApiResponse<T> {
   httpStatus: string;
@@ -23,7 +14,7 @@ const makeRequest = async <T>(
   body?: unknown,
   token?: string
 ): Promise<T> => {
-  const url = `${getApiBaseUrl()}${path}`;
+  const url = `${API_BASE_URL}${path}`;
   const options: RequestInit = {
     method,
     headers: {

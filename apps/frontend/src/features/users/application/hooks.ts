@@ -20,7 +20,7 @@ export const useCreateUser = () => {
   return useMutation({
     mutationFn: (input: CreateUserInput) => userRepository.createUser(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 };
@@ -32,7 +32,7 @@ export const useUpdateUser = () => {
     mutationFn: ({ id, input }: { id: string; input: UpdateUserInput }) =>
       userRepository.updateUser(id, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 };
@@ -43,7 +43,7 @@ export const useDeactivateUser = () => {
   return useMutation({
     mutationFn: (id: string) => userRepository.deactivateUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 };

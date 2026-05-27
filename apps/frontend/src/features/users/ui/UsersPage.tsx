@@ -129,7 +129,7 @@ const UsersPage: React.FC = () => {
     return fullName || input.email;
   };
 
-  const handleFormSubmit = async (input: UserFormInput): Promise<void> => {
+  const handleFormSubmit = (input: UserFormInput): void => {
     if (state.editingUser) {
       updateUser(
         {

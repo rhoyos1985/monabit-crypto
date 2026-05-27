@@ -128,7 +128,7 @@ interface UserFormSubmitInput {
 interface UserFormProps {
   isLoading: boolean;
   error: Error | null;
-  onSubmit: (input: UserFormSubmitInput) => Promise<void>;
+  onSubmit: (input: UserFormSubmitInput) => void | Promise<void>;
   onCancel: () => void;
   initialUser?: User;
 }
@@ -196,7 +196,7 @@ const UserForm: React.FC<UserFormProps> = ({
     <FormContainer>
       <Title>{initialUser ? 'Editar usuario' : 'Crear nuevo usuario'}</Title>
       {error && <ErrorMessage>{error.message}</ErrorMessage>}
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={(e) => void handleSubmit(e)}>
         <FormGroup>
           <Label htmlFor="email">Email *</Label>
           <Input
