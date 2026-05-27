@@ -1,0 +1,215 @@
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, waitFor, act } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import {
+  useLogin,
+  useRegister,
+  useLogout,
+  useCurrentUser,
+  useAuth,
+  useUpdateProfile,
+  useChangePassword,
+  useGoogleLogin,
+} from './hooks.js';
+import { buildTestStore } from '../../../test/utils.js';
+import type { SessionState } from '../../../app/slices/session.js';
+
+const buildUser = () => ({
+  id: 'u-1',
+  email: 'a@b.com',
+  firstName: 'Juan',
+  lastName: 'Pérez',
+  authProvider: 'email' as const,
+  role: 'user' as const,
+  isActive: true,
+  createdAt: '',
+  updatedAt: '',
+});
+
+const mocks = vi.hoisted(() => ({
+  register: vi.fn(),
+  login: vi.fn(),
+  logout: vi.fn(),
+  getCurrentUser: vi.fn(),
+  signInWithGoogle: vi.fn(),
+  updateMe: vi.fn(),
+  changePassword: vi.fn(),
+}));
+
+vi.mock('../infrastructure/api-client.js', () => ({
+  createAuthRepository: () => mocks,
+}));
+
+const wrapperWith = (state?: Partial<SessionState>) => {
+  const store = buildTestStore(state);
+  return ({ children }: { children: React.ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+};
+
+describe('Auth hooks', () => {
+  beforeEach(() => {
+    Object.values(mocks).forEach((m) => m.mockReset());
+  });
+
+  it('useLogin envuelve la llamada al repository y guarda sesión en Redux', async () => {
+    mocks.login.mockResolvedValueOnce({
+      user: buildUser(),
+      token: { access_token: 'jwt', expires_in: 3600, token_type: 'Bearer' },
+    });
+    const { result } = renderHook(() => useLogin(), { wrapper: wrapperWith() });
+
+    await act(async () => {
+      await result.current({ email: 'a@b.com', password: 'pwd' });
+    });
+    expect(mocks.login).toHaveBeenCalled();
+  });
+
+  it('useLogin propaga el error y lo guarda en el slice', async () => {
+    mocks.login.mockRejectedValueOnce(new Error('Credenciales'));
+    const { result } = renderHook(() => useLogin(), { wrapper: wrapperWith() });
+
+    await expect(result.current({ email: 'a@b.com', password: 'x' })).rejects.toThrow();
+  });
+
+  it('useRegister llama al repository y dispara setSession', async () => {
+    mocks.register.mockResolvedValueOnce({
+      user: buildUser(),
+      token: { access_token: 'jwt', expires_in: 3600, token_type: 'Bearer' },
+    });
+    const { result } = renderHook(() => useRegister(), { wrapper: wrapperWith() });
+    await act(async () => {
+      await result.current({
+        email: 'a@b.com',
+        password: 'pwd',
+        firstName: 'A',
+        lastName: 'B',
+        city: 'Bogotá',
+        state: 'Cundinamarca',
+        country: 'Colombia',
+      });
+    });
+    expect(mocks.register).toHaveBeenCalled();
+  });
+
+  it('useRegister propaga errores del repository', async () => {
+    mocks.register.mockRejectedValueOnce(new Error('fail'));
+    const { result } = renderHook(() => useRegister(), { wrapper: wrapperWith() });
+    await expect(
+      result.current({
+        email: 'a@b.com',
+        password: 'pwd',
+        firstName: 'A',
+        lastName: 'B',
+        city: 'X',
+        state: 'X',
+        country: 'X',
+      })
+    ).rejects.toThrow();
+  });
+
+  it('useLogout limpia la sesión incluso si el endpoint falla', async () => {
+    mocks.logout.mockRejectedValueOnce(new Error('net'));
+    const { result } = renderHook(() => useLogout(), { wrapper: wrapperWith() });
+    await act(async () => {
+      await result.current();
+    });
+    expect(mocks.logout).toHaveBeenCalled();
+  });
+
+  it('useCurrentUser carga el usuario cuando hay token sin user', async () => {
+    mocks.getCurrentUser.mockResolvedValueOnce(buildUser());
+    const { result } = renderHook(() => useCurrentUser(), {
+      wrapper: wrapperWith({ token: 'jwt-token', user: null }),
+    });
+
+    await waitFor(() => {
+      expect(mocks.getCurrentUser).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(result.current?.email).toBe('a@b.com');
+    });
+  });
+
+  it('useCurrentUser limpia sesión cuando getCurrentUser falla', async () => {
+    mocks.getCurrentUser.mockRejectedValueOnce(new Error('expired'));
+    renderHook(() => useCurrentUser(), {
+      wrapper: wrapperWith({ token: 'jwt-token', user: null }),
+    });
+    await waitFor(() => {
+      expect(mocks.getCurrentUser).toHaveBeenCalled();
+    });
+  });
+
+  it('useAuth devuelve user + token + isAuthenticated correcto', () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: wrapperWith({ token: 'jwt', user: buildUser() }),
+    });
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user?.email).toBe('a@b.com');
+  });
+
+  it('useUpdateProfile lanza error si no hay token', async () => {
+    const { result } = renderHook(() => useUpdateProfile(), {
+      wrapper: wrapperWith({ token: null }),
+    });
+    await expect(result.current({ firstName: 'X' })).rejects.toThrow(/sesión activa/i);
+  });
+
+  it('useUpdateProfile delega al repository con token', async () => {
+    mocks.updateMe.mockResolvedValueOnce(buildUser());
+    const { result } = renderHook(() => useUpdateProfile(), {
+      wrapper: wrapperWith({ token: 'jwt' }),
+    });
+    await act(async () => {
+      await result.current({ firstName: 'Nuevo' });
+    });
+    expect(mocks.updateMe).toHaveBeenCalledWith({ firstName: 'Nuevo' }, 'jwt');
+  });
+
+  it('useChangePassword lanza error si no hay token', async () => {
+    const { result } = renderHook(() => useChangePassword(), {
+      wrapper: wrapperWith({ token: null }),
+    });
+    await expect(
+      result.current({ currentPassword: 'old', newPassword: 'new12345' })
+    ).rejects.toThrow(/sesión activa/i);
+  });
+
+  it('useChangePassword delega al repository', async () => {
+    mocks.changePassword.mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useChangePassword(), {
+      wrapper: wrapperWith({ token: 'jwt' }),
+    });
+    await act(async () => {
+      await result.current({ currentPassword: 'old', newPassword: 'new12345' });
+    });
+    expect(mocks.changePassword).toHaveBeenCalled();
+  });
+
+  it('useChangePassword propaga errores del repo', async () => {
+    mocks.changePassword.mockRejectedValueOnce(new Error('bad password'));
+    const { result } = renderHook(() => useChangePassword(), {
+      wrapper: wrapperWith({ token: 'jwt' }),
+    });
+    await expect(
+      result.current({ currentPassword: 'x', newPassword: 'new12345' })
+    ).rejects.toThrow();
+  });
+
+  it('useGoogleLogin delega al repository.signInWithGoogle', async () => {
+    mocks.signInWithGoogle.mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useGoogleLogin(), { wrapper: wrapperWith() });
+    await act(async () => {
+      await result.current();
+    });
+    expect(mocks.signInWithGoogle).toHaveBeenCalled();
+  });
+
+  it('useGoogleLogin propaga errores', async () => {
+    mocks.signInWithGoogle.mockRejectedValueOnce(new Error('oauth'));
+    const { result } = renderHook(() => useGoogleLogin(), { wrapper: wrapperWith() });
+    await expect(result.current()).rejects.toThrow();
+  });
+});

@@ -28,14 +28,28 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'text-summary', 'lcov', 'json-summary'],
+      // Solo medir coverage de lógica de negocio: hooks, repositories y slices.
+      // Se excluyen componentes UI (estilos + glue React), entrypoints y declaraciones.
+      include: [
+        'src/app/slices/**/*.ts',
+        'src/features/*/application/**/*.ts',
+        'src/features/*/infrastructure/**/*.ts',
+        'src/features/dashboard/ui/CryptoTable.tsx',
+        'src/features/auth/ui/LoginPage.tsx',
+      ],
       exclude: [
-        'node_modules/**',
-        'src/test/**',
-        'src/main.tsx',
+        'src/**/*.test.{ts,tsx}',
         'src/**/*.d.ts',
         'src/**/types.ts',
+        'src/test/**',
       ],
+      thresholds: {
+        statements: 95,
+        functions: 95,
+        lines: 95,
+        branches: 70,
+      },
     },
   },
 });

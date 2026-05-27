@@ -1,6 +1,15 @@
 # Build stage
 FROM node:22-alpine AS builder
 
+# Build args para variables VITE_* (se embeben en el bundle final)
+ARG VITE_API_BASE_URL=""
+ARG VITE_SUPABASE_URL=""
+ARG VITE_SUPABASE_ANON_KEY=""
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
+    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 WORKDIR /app
 
 # Copiar archivos del monorepo
@@ -67,11 +76,11 @@ COPY --from=builder /app/apps/frontend/dist ./
 # Usuario nginx
 USER nginx
 
-# Exponer puerto
-EXPOSE 80
+# Exponer puerto (Cloud Run espera 8080)
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
