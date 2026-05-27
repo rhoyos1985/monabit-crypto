@@ -4,9 +4,30 @@ import { registerSchema, loginSchema, authResultResponseSchema, userResponseSche
 import { IAuthService } from '../application/ports.js';
 import { registerUser, loginUser } from '../application/use-cases.js';
 import { HTTPBadRequest, HTTPUnauthorized } from '../../../shared/http-error.js';
-import { User } from '../domain/types.js';
+import { User, AuthToken } from '../domain/types.js';
 import { createApiResponse } from '../../../shared/api-response.js';
 import { HttpStatusCode } from '../../../shared/http-error.js';
+
+interface UserResponse {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
+  role: 'admin' | 'user';
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AuthResultResponse {
+  user: UserResponse;
+  token: AuthToken;
+}
 
 interface AuthRequest extends Request {
   user?: User;
@@ -27,33 +48,31 @@ const validateInput = <T>(schema: typeof registerSchema | typeof loginSchema, da
   return parsed.data as T;
 };
 
-const formatAuthResult = (result: { user: User; token: { access_token: string; refresh_token?: string; expires_in: number; token_type: string } }) => {
+const buildUserResponse = (user: User): UserResponse => ({
+  id: user.id,
+  email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  city: user.city,
+  state: user.state,
+  country: user.country,
+  avatarUrl: user.avatarUrl,
+  authProvider: user.authProvider,
+  role: user.role,
+  isActive: user.isActive,
+  createdAt: user.createdAt.toISOString(),
+  updatedAt: user.updatedAt.toISOString(),
+});
+
+const formatAuthResult = (result: { user: User; token: AuthToken }): AuthResultResponse => {
   return authResultResponseSchema.parse({
-    user: {
-      ...result.user,
-      createdAt: result.user.createdAt.toISOString(),
-      updatedAt: result.user.updatedAt.toISOString(),
-    },
+    user: buildUserResponse(result.user),
     token: result.token,
   });
 };
 
-const formatUser = (user: User) => {
-  return userResponseSchema.parse({
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    city: user.city,
-    state: user.state,
-    country: user.country,
-    avatarUrl: user.avatarUrl,
-    authProvider: user.authProvider,
-    role: user.role,
-    isActive: user.isActive,
-    createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString(),
-  });
+const formatUser = (user: User): UserResponse => {
+  return userResponseSchema.parse(buildUserResponse(user));
 };
 
 export const createAuthController = (authService: IAuthService) => {
