@@ -1,6 +1,7 @@
-import type { AuthResult, LoginInput, RegisterInput, User } from '../domain/types.js';
+import type { AuthResult, LoginInput, RegisterInput, UpdateProfileInput, User } from '../domain/types.js';
 import type { IAuthRepository } from '../ports/index.js';
 import { API_BASE_URL } from '../../../shared/config.js';
+import { supabase } from '../../../shared/supabase.js';
 
 interface ApiResponse<T> {
   httpStatus: string;
@@ -73,5 +74,21 @@ export const createAuthRepository = (): IAuthRepository => ({
 
   async getCurrentUser(token: string): Promise<User> {
     return makeRequest<User>('GET', '/auth/me', undefined, token);
+  },
+
+  async signInWithGoogle(): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      throw new Error(error.message || 'No se pudo iniciar sesión con Google');
+    }
+  },
+
+  async updateMe(input: UpdateProfileInput, token: string): Promise<User> {
+    return makeRequest<User>('PATCH', '/users/me', input, token);
   },
 });

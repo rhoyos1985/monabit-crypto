@@ -3,7 +3,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface SessionUser {
   id: string;
   email: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
   role: 'admin' | 'user';
   isActive: boolean;
   createdAt: string;

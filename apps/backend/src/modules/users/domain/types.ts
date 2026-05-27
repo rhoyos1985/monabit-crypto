@@ -1,7 +1,13 @@
 export interface UserDTO {
   id: string;
   email: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
   role: 'admin' | 'user';
   isActive: boolean;
   createdAt: Date;
@@ -11,7 +17,11 @@ export interface UserDTO {
 export interface CreateUserInput {
   email: string;
   password: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   role?: 'admin' | 'user';
 }
 
@@ -31,7 +41,11 @@ export interface AuthResult {
 }
 
 export interface UpdateUserProfileInput {
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 export interface DeactivateUserInput {

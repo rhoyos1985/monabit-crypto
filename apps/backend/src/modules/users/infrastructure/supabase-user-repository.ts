@@ -6,7 +6,13 @@ import { HTTPBadRequest, HTTPConflict } from '../../../shared/http-error.js';
 interface Profile {
   id: string;
   email: string;
-  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  avatar_url: string | null;
+  auth_provider: 'email' | 'google';
   role: string;
   is_active: boolean;
   created_at: string;
@@ -16,7 +22,13 @@ interface Profile {
 const mapProfileToUser = (profile: Profile): UserDTO => ({
   id: profile.id,
   email: profile.email,
-  displayName: profile.display_name || undefined,
+  firstName: profile.first_name || undefined,
+  lastName: profile.last_name || undefined,
+  city: profile.city || undefined,
+  state: profile.state || undefined,
+  country: profile.country || undefined,
+  avatarUrl: profile.avatar_url || undefined,
+  authProvider: profile.auth_provider || 'email',
   role: (profile.role || 'user') as 'admin' | 'user',
   isActive: profile.is_active,
   createdAt: new Date(profile.created_at),
@@ -54,7 +66,12 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
       .insert({
         id: user.id,
         email: user.email,
-        display_name: user.displayName || null,
+        first_name: user.firstName || null,
+        last_name: user.lastName || null,
+        city: user.city || null,
+        state: user.state || null,
+        country: user.country || null,
+        auth_provider: 'email',
         role: user.role === 'admin' ? 'admin' : 'user',
         is_active: true,
       })
@@ -74,8 +91,23 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
   const update = async (id: string, data: Partial<UserDTO>): Promise<UserDTO> => {
     const updateData: Record<string, unknown> = {};
 
-    if (data.displayName !== undefined) {
-      updateData.display_name = data.displayName || null;
+    if (data.firstName !== undefined) {
+      updateData.first_name = data.firstName || null;
+    }
+    if (data.lastName !== undefined) {
+      updateData.last_name = data.lastName || null;
+    }
+    if (data.city !== undefined) {
+      updateData.city = data.city || null;
+    }
+    if (data.state !== undefined) {
+      updateData.state = data.state || null;
+    }
+    if (data.country !== undefined) {
+      updateData.country = data.country || null;
+    }
+    if (data.avatarUrl !== undefined) {
+      updateData.avatar_url = data.avatarUrl || null;
     }
     if (data.isActive !== undefined) {
       updateData.is_active = data.isActive;

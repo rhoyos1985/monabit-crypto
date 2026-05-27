@@ -1,7 +1,13 @@
 export interface User {
   id: string;
   email: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
   role: 'admin' | 'user';
   isActive: boolean;
   createdAt: string;
@@ -23,7 +29,19 @@ export interface AuthResult {
 export interface RegisterInput {
   email: string;
   password: string;
-  displayName?: string;
+  firstName: string;
+  lastName: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
+export interface UpdateProfileInput {
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 export interface LoginInput {

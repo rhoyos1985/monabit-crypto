@@ -7,7 +7,13 @@ import logger from '../../../shared/logger.js';
 interface Profile {
   id: string;
   email: string;
-  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  avatar_url: string | null;
+  auth_provider: 'email' | 'google';
   role: string;
   is_active: boolean;
   created_at: string;
@@ -23,7 +29,13 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
   const mapProfileToUser = (profile: Profile): User => ({
     id: profile.id,
     email: profile.email,
-    displayName: profile.display_name || undefined,
+    firstName: profile.first_name || undefined,
+    lastName: profile.last_name || undefined,
+    city: profile.city || undefined,
+    state: profile.state || undefined,
+    country: profile.country || undefined,
+    avatarUrl: profile.avatar_url || undefined,
+    authProvider: profile.auth_provider || 'email',
     role: (profile.role || 'user') as 'admin' | 'user',
     isActive: profile.is_active,
     createdAt: new Date(profile.created_at),
@@ -36,6 +48,15 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       const response = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
+        options: {
+          data: {
+            first_name: credentials.firstName,
+            last_name: credentials.lastName,
+            city: credentials.city,
+            state: credentials.state,
+            country: credentials.country,
+          },
+        },
       });
 
       data = response.data as AuthData;

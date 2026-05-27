@@ -3,6 +3,11 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   email: z.string().email('El email debe ser válido').min(1, 'El email es requerido'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
+  firstName: z.string().min(1, 'El nombre es requerido').max(100),
+  lastName: z.string().min(1, 'El apellido es requerido').max(100),
+  city: z.string().min(1, 'La ciudad es requerida').max(100),
+  state: z.string().min(1, 'El departamento es requerido').max(100),
+  country: z.string().min(1, 'El país es requerido').max(100),
   // Ignorar cualquier campo 'role' que venga en el body
 });
 
@@ -21,7 +26,13 @@ export const authTokenResponseSchema = z.object({
 export const userResponseSchema = z.object({
   id: z.string(),
   email: z.string(),
-  displayName: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  authProvider: z.enum(['email', 'google']),
   role: z.enum(['admin', 'user']),
   isActive: z.boolean(),
   createdAt: z.string(),

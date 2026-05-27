@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import type { User, CreateUserInput } from '../domain/types.js';
+import type { User } from '../domain/types.js';
 
 const FormContainer = styled.div`
   background: white;
@@ -112,10 +112,18 @@ const ErrorMessage = styled.div`
   grid-column: 1 / -1;
 `;
 
+interface UserFormSubmitInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  role: 'admin' | 'user';
+}
+
 interface UserFormProps {
   isLoading: boolean;
   error: Error | null;
-  onSubmit: (input: CreateUserInput) => Promise<void>;
+  onSubmit: (input: UserFormSubmitInput) => Promise<void>;
   onCancel: () => void;
   initialUser?: User;
 }
@@ -128,7 +136,8 @@ const UserForm: React.FC<UserFormProps> = ({
   initialUser,
 }) => {
   const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'user'>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,18 +145,20 @@ const UserForm: React.FC<UserFormProps> = ({
   useEffect(() => {
     if (initialUser) {
       setEmail(initialUser.email);
-      setDisplayName(initialUser.displayName || '');
+      setFirstName(initialUser.firstName || '');
+      setLastName(initialUser.lastName || '');
       setRole(initialUser.role);
     }
   }, [initialUser]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit({ email, displayName, password, role });
+      await onSubmit({ email, firstName, lastName, password, role });
       setEmail('');
-      setDisplayName('');
+      setFirstName('');
+      setLastName('');
       setPassword('');
       setRole('user');
     } finally {
@@ -157,7 +168,7 @@ const UserForm: React.FC<UserFormProps> = ({
 
   return (
     <FormContainer>
-      <Title>{initialUser ? 'Edit User' : 'Create New User'}</Title>
+      <Title>{initialUser ? 'Editar usuario' : 'Crear nuevo usuario'}</Title>
       {error && <ErrorMessage>{error.message}</ErrorMessage>}
       <Form onSubmit={handleSubmit}>
         <FormGroup>
@@ -173,38 +184,50 @@ const UserForm: React.FC<UserFormProps> = ({
         </FormGroup>
 
         <FormGroup>
-          <Label htmlFor="displayName">Display Name</Label>
+          <Label htmlFor="firstName">Nombre</Label>
           <Input
-            id="displayName"
+            id="firstName"
             type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             disabled={isLoading || isSubmitting}
           />
         </FormGroup>
 
         <FormGroup>
-          <Label htmlFor="role">Role</Label>
+          <Label htmlFor="lastName">Apellido</Label>
+          <Input
+            id="lastName"
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            disabled={isLoading || isSubmitting}
+          />
+        </FormGroup>
+
+        <FormGroup>
+          <Label htmlFor="role">Rol</Label>
           <Select
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value as 'admin' | 'user')}
-            disabled={isLoading || isSubmitting}
+            disabled={isLoading || isSubmitting || !!initialUser}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="user">Usuario</option>
+            <option value="admin">Administrador</option>
           </Select>
         </FormGroup>
 
         {!initialUser && (
           <FormGroup>
-            <Label htmlFor="password">Password *</Label>
+            <Label htmlFor="password">Contraseña *</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
               disabled={isLoading || isSubmitting}
             />
           </FormGroup>
@@ -212,10 +235,10 @@ const UserForm: React.FC<UserFormProps> = ({
 
         <ButtonGroup>
           <Button type="submit" disabled={isLoading || isSubmitting}>
-            {isSubmitting ? 'Saving...' : initialUser ? 'Update' : 'Create'}
+            {isSubmitting ? 'Guardando...' : initialUser ? 'Actualizar' : 'Crear'}
           </Button>
           <CancelButton type="button" onClick={onCancel} disabled={isLoading || isSubmitting}>
-            Cancel
+            Cancelar
           </CancelButton>
         </ButtonGroup>
       </Form>

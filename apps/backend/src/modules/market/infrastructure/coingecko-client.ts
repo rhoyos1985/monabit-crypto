@@ -20,9 +20,8 @@ interface CoinGeckoGlobalData {
   data: {
     total_market_cap: { usd: number };
     total_volume: { usd: number };
-    btc_dominance: number;
-    eth_dominance: number;
-    last_updated_at: number;
+    market_cap_percentage: { btc: number; eth: number };
+    updated_at: number;
   };
 }
 
@@ -44,9 +43,9 @@ const mapCryptoData = (crypto: CoinGeckoCrypto): CryptoData => ({
 const mapGlobalData = (global: CoinGeckoGlobalData): MarketKPIs => ({
   totalMarketCap: global.data.total_market_cap.usd,
   totalVolume: global.data.total_volume.usd,
-  btcDominance: global.data.btc_dominance,
-  ethereumDominance: global.data.eth_dominance,
-  lastUpdated: new Date(global.data.last_updated_at * 1000).toISOString(),
+  btcDominance: global.data.market_cap_percentage.btc,
+  ethereumDominance: global.data.market_cap_percentage.eth,
+  lastUpdated: new Date(global.data.updated_at * 1000).toISOString(),
 });
 
 export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {

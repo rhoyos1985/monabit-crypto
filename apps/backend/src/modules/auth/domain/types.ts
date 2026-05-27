@@ -1,6 +1,11 @@
 export interface AuthCredentials {
   email: string;
   password: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 export interface AuthToken {
@@ -13,7 +18,13 @@ export interface AuthToken {
 export interface User {
   id: string;
   email: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
   role: 'admin' | 'user';
   isActive: boolean;
   createdAt: Date;

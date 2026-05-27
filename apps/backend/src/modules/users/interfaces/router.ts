@@ -16,7 +16,7 @@ export const createUsersRouter = (supabase: SupabaseClient): Router => {
   const router = Router();
   const userRepository = createSupabaseUserRepository(supabase);
   const authService = createSupabaseAuthService(supabase);
-  const { listUsersHandler, createUserHandler, updateUserHandler, deactivateUserHandler } = createUsersController(
+  const { listUsersHandler, createUserHandler, updateUserHandler, updateMeHandler, deactivateUserHandler } = createUsersController(
     userRepository,
     authService
   );
@@ -134,6 +134,34 @@ export const createUsersRouter = (supabase: SupabaseClient): Router => {
    *       404:
    *         description: Usuario no encontrado
    */
+  /**
+   * @swagger
+   * /users/me:
+   *   patch:
+   *     summary: Actualizar el perfil del usuario autenticado
+   *     tags: [Users]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               firstName: { type: string }
+   *               lastName: { type: string }
+   *               city: { type: string }
+   *               state: { type: string }
+   *               country: { type: string }
+   *     responses:
+   *       200:
+   *         description: Perfil actualizado
+   *       401:
+   *         description: Token inválido o ausente
+   */
+  router.patch('/me', requireAuth as RequestHandler, updateMeHandler as RequestHandler);
+
   router.patch('/:id', requireAuth as RequestHandler, updateUserHandler as RequestHandler);
 
   /**

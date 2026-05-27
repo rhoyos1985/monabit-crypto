@@ -31,7 +31,11 @@ export const createUser = (userRepository: IUserRepository, authProvider: IAuthP
     id: authResult.user.id,
     email: authResult.user.email,
     password: input.password,
-    displayName: input.displayName,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    city: input.city,
+    state: input.state,
+    country: input.country,
     role,
   };
 
@@ -54,7 +58,11 @@ export const updateUserProfile = (userRepository: IUserRepository) => async (
   }
 
   return userRepository.update(userId, {
-    displayName: input.displayName ?? user.displayName,
+    firstName: input.firstName ?? user.firstName,
+    lastName: input.lastName ?? user.lastName,
+    city: input.city ?? user.city,
+    state: input.state ?? user.state,
+    country: input.country ?? user.country,
     updatedAt: new Date(),
   });
 };

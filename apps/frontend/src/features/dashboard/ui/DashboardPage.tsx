@@ -1,8 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useAuth, useLogout } from '../../auth/application/hooks.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../auth/application/hooks.js';
 import { useMarketOverview } from '../application/hooks.js';
+import UserMenu from '../../../shared/ui/UserMenu.js';
 import CryptoTable from './CryptoTable.js';
 import MarketKPIs from './MarketKPIs.js';
 import PriceChangeChart from './PriceChangeChart.js';
@@ -27,36 +28,30 @@ const Header = styled.header`
 const Title = styled.h1`
   margin: 0;
   color: ${(props) => props.theme.brandDark};
+  cursor: pointer;
 `;
 
 const UserInfo = styled.div`
   display: flex;
-  gap: 15px;
+  gap: 16px;
   align-items: center;
 `;
 
-const LogoutButton = styled.button`
-  padding: 10px 20px;
-  background: ${(props) => props.theme.brandPrimary};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+const NavLink = styled(Link)`
+  color: ${(props) => props.theme.brandPrimary};
+  font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 4px;
 
   &:hover {
-    background: ${(props) => props.theme.brandAccent};
+    background: ${(props) => props.theme.brandPrimary}10;
   }
 `;
 
 const Content = styled.main`
   padding: 0;
-`;
-
-const UserText = styled.p`
-  margin: 0;
-  color: #666;
-  font-size: 14px;
 `;
 
 const LoadingContainer = styled.div`
@@ -92,24 +87,15 @@ interface DashboardPageProps {}
 const DashboardPage: React.FC<DashboardPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const logout = useLogout();
   const { data: marketData, isLoading, error } = useMarketOverview();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   return (
     <Container>
       <Header>
-        <Title>MonaBit Dashboard</Title>
+        <Title onClick={() => navigate('/dashboard')}>MonaBit Dashboard</Title>
         <UserInfo>
-          <UserText>
-            {user?.displayName || user?.email}
-            {user?.role === 'admin' && ' (Admin)'}
-          </UserText>
-          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+          {user?.role === 'admin' && <NavLink to="/users">Usuarios</NavLink>}
+          <UserMenu />
         </UserInfo>
       </Header>
 

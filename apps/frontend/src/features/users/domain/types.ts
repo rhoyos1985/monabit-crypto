@@ -1,7 +1,13 @@
 export interface User {
   id: string;
   email: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  avatarUrl?: string;
+  authProvider: 'email' | 'google';
   role: 'admin' | 'user';
   isActive: boolean;
   createdAt: string;
@@ -11,12 +17,20 @@ export interface User {
 export interface CreateUserInput {
   email: string;
   password: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   role?: 'admin' | 'user';
 }
 
 export interface UpdateUserInput {
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 export interface UserListResponse {

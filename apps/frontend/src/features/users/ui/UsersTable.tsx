@@ -89,18 +89,20 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDeactivate, is
       <thead>
         <tr>
           <HeaderCell>Email</HeaderCell>
-          <HeaderCell>Name</HeaderCell>
-          <HeaderCell>Role</HeaderCell>
-          <HeaderCell>Status</HeaderCell>
-          <HeaderCell>Created</HeaderCell>
-          <HeaderCell>Actions</HeaderCell>
+          <HeaderCell>Nombre</HeaderCell>
+          <HeaderCell>Ciudad</HeaderCell>
+          <HeaderCell>Rol</HeaderCell>
+          <HeaderCell>Estado</HeaderCell>
+          <HeaderCell>Creado</HeaderCell>
+          <HeaderCell>Acciones</HeaderCell>
         </tr>
       </thead>
       <tbody>
         {users.map((user) => (
           <BodyRow key={user.id}>
             <BodyCell>{user.email}</BodyCell>
-            <BodyCell>{user.displayName || '-'}</BodyCell>
+            <BodyCell>{[user.firstName, user.lastName].filter(Boolean).join(' ') || '-'}</BodyCell>
+            <BodyCell>{user.city ? `${user.city}, ${user.state ?? ''}` : '-'}</BodyCell>
             <BodyCell>
               <RoleBadge role={user.role}>{user.role.toUpperCase()}</RoleBadge>
             </BodyCell>

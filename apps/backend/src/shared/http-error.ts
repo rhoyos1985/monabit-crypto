@@ -88,3 +88,10 @@ export class HTTPConflict extends AppError {
     Object.setPrototypeOf(this, HTTPConflict.prototype);
   }
 }
+
+export class HTTPServiceUnavailable extends AppError {
+  constructor(message: string = 'Service Unavailable', errorData?: ErrorDetails) {
+    super(message, HttpStatusCode.SERVICE_UNAVAILABLE, errorData);
+    Object.setPrototypeOf(this, HTTPServiceUnavailable.prototype);
+  }
+}

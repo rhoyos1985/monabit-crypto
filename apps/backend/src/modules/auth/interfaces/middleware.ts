@@ -11,7 +11,13 @@ export interface AuthRequest extends Request {
 interface Profile {
   id: string;
   email: string;
-  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  avatar_url: string | null;
+  auth_provider: 'email' | 'google';
   role: string;
   is_active: boolean;
   created_at: string;
@@ -48,7 +54,13 @@ export const createRequireAuthMiddleware =
     const user: User = {
       id: typedProfile.id,
       email: typedProfile.email,
-      displayName: typedProfile.display_name || undefined,
+      firstName: typedProfile.first_name || undefined,
+      lastName: typedProfile.last_name || undefined,
+      city: typedProfile.city || undefined,
+      state: typedProfile.state || undefined,
+      country: typedProfile.country || undefined,
+      avatarUrl: typedProfile.avatar_url || undefined,
+      authProvider: typedProfile.auth_provider || 'email',
       role: (typedProfile.role || 'user') as 'admin' | 'user',
       isActive: typedProfile.is_active,
       createdAt: new Date(typedProfile.created_at),
