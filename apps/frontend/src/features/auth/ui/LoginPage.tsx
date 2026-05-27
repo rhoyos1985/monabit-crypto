@@ -227,22 +227,26 @@ const LoginPage: React.FC<LoginPageProps> = () => {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </FormGroup>
           <FormGroup>
             <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="current-password"
             />
           </FormGroup>
           <Button type="submit" disabled={isLoading}>

@@ -232,29 +232,33 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
               <Label htmlFor="email">
                 Email <ReadOnlyHint>(no editable)</ReadOnlyHint>
               </Label>
-              <Input id="email" type="email" value={user.email} readOnly $readOnly />
+              <Input id="email" name="email" type="email" value={user.email} readOnly $readOnly autoComplete="email" />
             </FormGroup>
             <Row>
               <FormGroup>
                 <Label htmlFor="firstName">Nombre</Label>
                 <Input
                   id="firstName"
+                  name="firstName"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                   disabled={isSubmitting}
+                  autoComplete="given-name"
                 />
               </FormGroup>
               <FormGroup>
                 <Label htmlFor="lastName">Apellido</Label>
                 <Input
                   id="lastName"
+                  name="lastName"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
                   disabled={isSubmitting}
+                  autoComplete="family-name"
                 />
               </FormGroup>
             </Row>

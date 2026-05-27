@@ -257,22 +257,26 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
               <Label htmlFor="firstName">Nombre</Label>
               <Input
                 id="firstName"
+                name="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
                 disabled={isLoading}
+                autoComplete="given-name"
               />
             </FormGroup>
             <FormGroup>
               <Label htmlFor="lastName">Apellido</Label>
               <Input
                 id="lastName"
+                name="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
                 disabled={isLoading}
+                autoComplete="family-name"
               />
             </FormGroup>
           </Row>
@@ -290,23 +294,27 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </FormGroup>
           <FormGroup>
             <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
               disabled={isLoading}
+              autoComplete="new-password"
             />
           </FormGroup>
           <Button type="submit" disabled={isLoading}>

@@ -142,6 +142,7 @@ const CitySelect: React.FC<CitySelectProps> = ({
     <Wrapper ref={wrapperRef}>
       <InputField
         id={id}
+        name={id}
         type="text"
         value={query}
         onChange={handleChange}
@@ -149,7 +150,7 @@ const CitySelect: React.FC<CitySelectProps> = ({
         placeholder={isLoading ? 'Cargando ciudades...' : placeholder}
         disabled={disabled || isLoading}
         $hasError={hasError}
-        autoComplete="off"
+        autoComplete="address-level2"
       />
       {isOpen && !isLoading && (
         <Dropdown>
