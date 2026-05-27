@@ -45,25 +45,43 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.price_alerts ENABLE ROW LEVEL SECURITY;
 
+-- Función auxiliar SECURITY DEFINER para verificar rol admin sin recursión
+-- Bypassa RLS al consultar profiles, evitando recursión infinita en policies
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
 -- Policies para profiles
 -- Un usuario accede solo a su propio perfil, admin accede a todos
 CREATE POLICY "Users can read their own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id OR (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
-
-CREATE POLICY "Admin can read all profiles"
-  ON public.profiles FOR SELECT
-  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
+  USING (auth.uid() = id OR public.is_admin());
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM public.profiles WHERE id = auth.uid()));
+  WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Admin can update any profile except their own role"
+CREATE POLICY "Admin can update any profile"
   ON public.profiles FOR UPDATE
-  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin')
-  WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admin can insert profiles"
+  ON public.profiles FOR INSERT
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admin can delete profiles"
+  ON public.profiles FOR DELETE
+  USING (public.is_admin());
 
 -- Policies para user_preferences
 CREATE POLICY "Users can read their own preferences"

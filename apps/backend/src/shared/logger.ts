@@ -13,10 +13,10 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.printf(
-          ({ level, message, timestamp, stack }) =>
-            `${timestamp} [${level}]: ${message}${stack ? `\n${stack}` : ''}`
-        )
+        winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
+          const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : '';
+          return `${timestamp} [${level}]: ${message}${metaStr}${stack ? `\n${stack}` : ''}`;
+        })
       ),
     }),
     new winston.transports.File({

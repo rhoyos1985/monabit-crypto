@@ -2,6 +2,7 @@ import { SupabaseClient, AuthUser } from '@supabase/supabase-js';
 import { IAuthService } from '../application/ports.js';
 import { User, AuthToken, AuthCredentials, AuthResult } from '../domain/types.js';
 import { HTTPConflict, HTTPUnauthorized, HTTPBadRequest } from '../../../shared/http-error.js';
+import logger from '../../../shared/logger.js';
 
 interface Profile {
   id: string;
@@ -125,6 +126,13 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
       .single();
 
     if (profileError || !profile) {
+      logger.error('Failed to load user profile', {
+        userId: authUser.user.id,
+        errorCode: profileError?.code,
+        errorMessage: profileError?.message,
+        errorDetails: profileError?.details,
+        errorHint: profileError?.hint,
+      });
       throw new HTTPBadRequest('No se pudo cargar el perfil del usuario. Por favor, intenta de nuevo.');
     }
 
