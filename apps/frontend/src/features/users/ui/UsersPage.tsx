@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../domain/types.js';
@@ -6,6 +6,7 @@ import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser } from '../ap
 import UsersTable from './UsersTable.js';
 import UserForm from './UserForm.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
+import { useToast } from '../../../shared/ui/Toast/ToastProvider.js';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -66,24 +67,6 @@ const AddUserButton = styled.button`
   }
 `;
 
-const ErrorMessage = styled.div`
-  padding: 16px;
-  background: #fee;
-  color: #c33;
-  border-radius: 4px;
-  margin-bottom: 24px;
-  font-size: 14px;
-`;
-
-const SuccessMessage = styled.div`
-  padding: 16px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
-  margin-bottom: 24px;
-  font-size: 14px;
-`;
-
 const LoadingSpinner = styled.div`
   padding: 24px;
   text-align: center;
@@ -94,7 +77,6 @@ const LoadingSpinner = styled.div`
 interface UsersPageState {
   showForm: boolean;
   editingUser: User | null;
-  successMessage: string | null;
 }
 
 interface UserFormInput {
@@ -107,10 +89,10 @@ interface UserFormInput {
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [state, setState] = useState<UsersPageState>({
     showForm: false,
     editingUser: null,
-    successMessage: null,
   });
 
   const { data: users, isLoading: usersLoading, error: usersError } = useUsers();
@@ -118,16 +100,25 @@ const UsersPage: React.FC = () => {
   const { mutate: updateUser, isPending: updatePending, error: updateError } = useUpdateUser();
   const { mutate: deactivateUser, isPending: deactivatePending, error: deactivateError } = useDeactivateUser();
 
+  useEffect(() => {
+    if (usersError) showError(usersError.message);
+  }, [usersError, showError]);
+
+  useEffect(() => {
+    const err = createError || updateError || deactivateError;
+    if (err) showError(err.message);
+  }, [createError, updateError, deactivateError, showError]);
+
   const handleAddUserClick = (): void => {
-    setState({ showForm: true, editingUser: null, successMessage: null });
+    setState({ showForm: true, editingUser: null });
   };
 
   const handleEditUser = (user: User): void => {
-    setState({ showForm: true, editingUser: user, successMessage: null });
+    setState({ showForm: true, editingUser: user });
   };
 
   const handleFormCancel = (): void => {
-    setState({ showForm: false, editingUser: null, successMessage: null });
+    setState({ showForm: false, editingUser: null });
   };
 
   const buildUserLabel = (input: UserFormInput): string => {
@@ -147,28 +138,16 @@ const UsersPage: React.FC = () => {
         },
         {
           onSuccess: () => {
-            setState({
-              showForm: false,
-              editingUser: null,
-              successMessage: `Usuario ${buildUserLabel(input)} actualizado exitosamente`,
-            });
-            setTimeout(() => {
-              setState((prev) => ({ ...prev, successMessage: null }));
-            }, 3000);
+            setState({ showForm: false, editingUser: null });
+            showSuccess(`Usuario ${buildUserLabel(input)} actualizado exitosamente`);
           },
         }
       );
     } else {
       createUser(input, {
         onSuccess: () => {
-          setState({
-            showForm: false,
-            editingUser: null,
-            successMessage: `Usuario ${buildUserLabel(input)} creado exitosamente`,
-          });
-          setTimeout(() => {
-            setState((prev) => ({ ...prev, successMessage: null }));
-          }, 3000);
+          setState({ showForm: false, editingUser: null });
+          showSuccess(`Usuario ${buildUserLabel(input)} creado exitosamente`);
         },
       });
     }
@@ -177,10 +156,7 @@ const UsersPage: React.FC = () => {
   const handleDeactivateUser = (userId: string): void => {
     deactivateUser(userId, {
       onSuccess: () => {
-        setState((prev) => ({ ...prev, successMessage: 'Usuario desactivado exitosamente' }));
-        setTimeout(() => {
-          setState((prev) => ({ ...prev, successMessage: null }));
-        }, 3000);
+        showSuccess('Usuario desactivado exitosamente');
       },
     });
   };
@@ -204,13 +180,6 @@ const UsersPage: React.FC = () => {
             </AddUserButton>
           )}
         </PageHeader>
-
-        {state.successMessage && <SuccessMessage>{state.successMessage}</SuccessMessage>}
-        {(usersError || formError) && (
-          <ErrorMessage>
-            {usersError?.message || formError?.message || 'Error al procesar la solicitud'}
-          </ErrorMessage>
-        )}
 
         {state.showForm && (
           <UserForm

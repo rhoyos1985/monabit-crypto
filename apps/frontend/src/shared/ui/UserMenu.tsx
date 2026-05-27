@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth, useLogout } from '../../features/auth/application/hooks.js';
@@ -114,6 +114,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
   const logout = useLogout();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [avatarFailed, setAvatarFailed] = useState<boolean>(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,6 +127,10 @@ const UserMenu: React.FC<UserMenuProps> = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [user?.avatarUrl]);
+
   const handleSettings = (): void => {
     setIsOpen(false);
     navigate('/settings');
@@ -137,10 +142,19 @@ const UserMenu: React.FC<UserMenuProps> = () => {
     navigate('/login');
   };
 
+  const initials = useMemo(
+    () => getInitials(user?.firstName, user?.lastName, user?.email),
+    [user?.firstName, user?.lastName, user?.email]
+  );
+
+  const fullName = useMemo(
+    () => [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '',
+    [user?.firstName, user?.lastName, user?.email]
+  );
+
   if (!user) return null;
 
-  const initials = getInitials(user.firstName, user.lastName, user.email);
-  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+  const showAvatar = user.avatarUrl && !avatarFailed;
 
   return (
     <Wrapper ref={wrapperRef}>
@@ -150,7 +164,17 @@ const UserMenu: React.FC<UserMenuProps> = () => {
         aria-label="Menú de usuario"
         title={fullName}
       >
-        {user.avatarUrl ? <img src={user.avatarUrl} alt={fullName} /> : initials}
+        {showAvatar ? (
+          <img
+            src={user.avatarUrl}
+            alt={fullName}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            onError={() => setAvatarFailed(true)}
+          />
+        ) : (
+          initials
+        )}
       </AvatarButton>
       {isOpen && (
         <Menu>

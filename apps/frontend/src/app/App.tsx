@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './store.js';
 import { router } from './router.js';
 import { theme } from '@/shared/theme.js';
+import { ToastProvider } from '../shared/ui/Toast/ToastProvider.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +22,9 @@ const App: React.FC = () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>

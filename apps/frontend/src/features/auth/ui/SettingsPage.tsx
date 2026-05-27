@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useAuth, useUpdateProfile } from '../application/hooks.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
+import { useToast } from '../../../shared/ui/Toast/ToastProvider.js';
 import type { CityLocation } from '../../locations/domain/types.js';
 
 const Container = styled.div`
@@ -39,6 +40,30 @@ const Card = styled.div`
   border-radius: 8px;
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+`;
+
+const BackButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  color: ${(props) => props.theme.brandPrimary};
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    color: ${(props) => props.theme.brandAccent};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const PageTitle = styled.h2`
@@ -131,34 +156,17 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
 `;
 
-const ErrorMessage = styled.div`
-  padding: 12px;
-  background: #fee;
-  color: #c33;
-  border-radius: 4px;
-  font-size: 14px;
-`;
-
-const SuccessMessage = styled.div`
-  padding: 12px;
-  background: #efe;
-  color: #2a7;
-  border-radius: 4px;
-  font-size: 14px;
-`;
-
 interface SettingsPageProps {}
 
 const SettingsPage: React.FC<SettingsPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const updateProfile = useUpdateProfile();
+  const { showSuccess, showError } = useToast();
 
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [location, setLocation] = useState<CityLocation | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -180,11 +188,9 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     if (!firstName.trim() || !lastName.trim()) {
-      setError('El nombre y apellido son requeridos');
+      showError('El nombre y apellido son requeridos');
       return;
     }
 
@@ -197,9 +203,9 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         state: location?.state,
         country: location?.country,
       });
-      setSuccess('Perfil actualizado exitosamente');
+      showSuccess('Perfil actualizado exitosamente');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo actualizar el perfil');
+      showError(err instanceof Error ? err.message : 'No se pudo actualizar el perfil');
     } finally {
       setIsSubmitting(false);
     }
@@ -212,11 +218,15 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         <UserMenu />
       </Header>
       <Content>
+        <BackButton type="button" onClick={() => navigate('/dashboard')}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+          </svg>
+          Volver al dashboard
+        </BackButton>
         <Card>
           <PageTitle>Configuración del perfil</PageTitle>
           <Subtitle>Actualiza tu información personal. El email no se puede cambiar.</Subtitle>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-          {success && <SuccessMessage>{success}</SuccessMessage>}
           <Form onSubmit={handleSubmit}>
             <FormGroup>
               <Label htmlFor="email">
