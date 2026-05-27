@@ -55,9 +55,7 @@ coverage/
 *.tfvars
 *.tfvars.json
 
-# Database migrations (development only, generated at runtime)
-*.sql
-
 # Supabase CLI temp files
 supabase/.branches/
 supabase/.temp/
+supabase/snippets/
