@@ -367,6 +367,24 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
               Ingresa tu contraseña actual y luego la nueva. Mínimo 8 caracteres.
             </Subtitle>
             <Form onSubmit={handleChangePassword}>
+              {/* Campo username oculto para accesibilidad y password managers */}
+              <input
+                type="email"
+                name="username"
+                autoComplete="username"
+                value={user.email}
+                readOnly
+                aria-hidden="true"
+                tabIndex={-1}
+                style={{
+                  position: 'absolute',
+                  left: '-9999px',
+                  width: '1px',
+                  height: '1px',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                }}
+              />
               <FormGroup>
                 <Label htmlFor="currentPassword">Contraseña actual</Label>
                 <Input
