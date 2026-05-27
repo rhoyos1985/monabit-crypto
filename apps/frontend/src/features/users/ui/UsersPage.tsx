@@ -48,6 +48,30 @@ const PageContainer = styled.div`
   }
 `;
 
+const BackButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  color: ${(props) => props.theme.brandPrimary};
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    color: ${(props) => props.theme.brandAccent};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
 const PageHeader = styled.div`
   display: flex;
   flex-direction: column;
@@ -203,6 +227,12 @@ const UsersPage: React.FC = () => {
         <UserMenu />
       </Header>
       <PageContainer>
+        <BackButton type="button" onClick={() => navigate('/dashboard')}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+          </svg>
+          Volver al dashboard
+        </BackButton>
         <PageHeader>
           <Title>Gestión de Usuarios</Title>
           {!state.showForm && (
