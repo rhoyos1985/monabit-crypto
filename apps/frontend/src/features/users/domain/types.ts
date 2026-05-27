@@ -1,3 +1,7 @@
+import type { UserRole } from '../../auth/domain/types.js';
+
+export type { UserRole };
+
 export interface User {
   id: string;
   email: string;
@@ -8,7 +12,7 @@ export interface User {
   country?: string;
   avatarUrl?: string;
   authProvider: 'email' | 'google';
-  role: 'admin' | 'user';
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +26,7 @@ export interface CreateUserInput {
   city?: string;
   state?: string;
   country?: string;
-  role?: 'admin' | 'user';
+  role?: UserRole;
 }
 
 export interface UpdateUserInput {
@@ -31,6 +35,7 @@ export interface UpdateUserInput {
   city?: string;
   state?: string;
   country?: string;
+  role?: UserRole;
 }
 
 export interface UserListResponse {

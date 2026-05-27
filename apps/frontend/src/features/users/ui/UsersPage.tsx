@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../domain/types.js';
+import type { User, UserRole } from '../domain/types.js';
 import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser } from '../application/hooks.js';
 import UsersTable from './UsersTable.js';
 import UserForm from './UserForm.js';
@@ -87,7 +87,7 @@ interface UserFormInput {
   state?: string;
   country?: string;
   password: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 const UsersPage: React.FC = () => {
@@ -140,6 +140,7 @@ const UsersPage: React.FC = () => {
             city: input.city,
             state: input.state,
             country: input.country,
+            role: input.role,
           },
         },
         {

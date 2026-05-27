@@ -25,7 +25,9 @@ export interface MarketOverview {
   lastFetched: string;
 }
 
+import type { UserRole } from '../../auth/domain/types.js';
+
 export interface GetMarketOverviewInput {
   requesterId: string;
-  requesterRole: 'admin' | 'user';
+  requesterRole: UserRole;
 }

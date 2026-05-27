@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { UserRole } from '../../features/auth/domain/types.js';
 
 export interface SessionUser {
   id: string;
@@ -10,7 +11,7 @@ export interface SessionUser {
   country?: string;
   avatarUrl?: string;
   authProvider: 'email' | 'google';
-  role: 'admin' | 'user';
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

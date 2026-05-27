@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import type { User } from '../domain/types.js';
+import type { User, UserRole } from '../domain/types.js';
 
 const Table = styled.table`
   width: 100%;
@@ -29,7 +29,7 @@ const BodyRow = styled.tr`
   }
 `;
 
-const RoleBadge = styled.span<{ $role: 'admin' | 'user' }>`
+const RoleBadge = styled.span<{ $role: UserRole }>`
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;

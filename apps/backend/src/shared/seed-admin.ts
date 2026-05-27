@@ -1,10 +1,11 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import logger from './logger.js';
+import type { UserRole } from '../modules/auth/domain/types.js';
 
 interface ExistingProfile {
   id: string;
   email: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 /**

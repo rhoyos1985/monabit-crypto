@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { IUserRepository } from '../application/ports.js';
-import { UserDTO, CreateUserInput } from '../domain/types.js';
+import { UserDTO, CreateUserInput, UserRole } from '../domain/types.js';
 import { HTTPBadRequest, HTTPConflict } from '../../../shared/http-error.js';
 
 interface Profile {
@@ -29,7 +29,7 @@ const mapProfileToUser = (profile: Profile): UserDTO => ({
   country: profile.country || undefined,
   avatarUrl: profile.avatar_url || undefined,
   authProvider: profile.auth_provider || 'email',
-  role: (profile.role || 'user') as 'admin' | 'user',
+  role: (profile.role || 'user') as UserRole,
   isActive: profile.is_active,
   createdAt: new Date(profile.created_at),
   updatedAt: new Date(profile.updated_at),
@@ -108,6 +108,9 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
     }
     if (data.avatarUrl !== undefined) {
       updateData.avatar_url = data.avatarUrl || null;
+    }
+    if (data.role !== undefined) {
+      updateData.role = data.role;
     }
     if (data.isActive !== undefined) {
       updateData.is_active = data.isActive;

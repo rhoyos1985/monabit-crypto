@@ -4,7 +4,7 @@ import { registerSchema, loginSchema, authResultResponseSchema, userResponseSche
 import { IAuthService } from '../application/ports.js';
 import { registerUser, loginUser } from '../application/use-cases.js';
 import { HTTPBadRequest, HTTPUnauthorized } from '../../../shared/http-error.js';
-import { User, AuthToken } from '../domain/types.js';
+import { User, AuthToken, UserRole } from '../domain/types.js';
 import { createApiResponse } from '../../../shared/api-response.js';
 import { HttpStatusCode } from '../../../shared/http-error.js';
 
@@ -18,7 +18,7 @@ interface UserResponse {
   country?: string;
   avatarUrl?: string;
   authProvider: 'email' | 'google';
-  role: 'admin' | 'user';
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

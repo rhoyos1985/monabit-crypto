@@ -1,5 +1,5 @@
 import { IUserRepository, IAuthProvider } from './ports.js';
-import { CreateUserInput, UpdateUserProfileInput, ListUsersInput, DeactivateUserInput, UserDTO } from '../domain/types.js';
+import { CreateUserInput, UpdateUserProfileInput, ListUsersInput, DeactivateUserInput, UserDTO, UserRole } from '../domain/types.js';
 import { HTTPForbidden, HTTPConflict, HTTPNotFound } from '../../../shared/http-error.js';
 
 export const listUsers = (userRepository: IUserRepository) => async (input: ListUsersInput): Promise<UserDTO[]> => {
@@ -10,7 +10,7 @@ export const listUsers = (userRepository: IUserRepository) => async (input: List
 };
 
 export const createUser = (userRepository: IUserRepository, authProvider: IAuthProvider) => async (
-  input: CreateUserInput & { requesterId: string; requesterRole: 'admin' | 'user' }
+  input: CreateUserInput & { requesterId: string; requesterRole: UserRole }
 ): Promise<UserDTO> => {
   if (input.requesterRole !== 'admin') {
     throw new HTTPForbidden('Only admins can create users');
@@ -45,11 +45,15 @@ export const createUser = (userRepository: IUserRepository, authProvider: IAuthP
 export const updateUserProfile = (userRepository: IUserRepository) => async (
   userId: string,
   requesterId: string,
-  requesterRole: 'admin' | 'user',
-  input: UpdateUserProfileInput
+  requesterRole: UserRole,
+  input: UpdateUserProfileInput & { role?: UserRole }
 ): Promise<UserDTO> => {
   if (requesterRole !== 'admin' && userId !== requesterId) {
     throw new HTTPForbidden('You can only edit your own profile');
+  }
+
+  if (input.role !== undefined && requesterRole !== 'admin') {
+    throw new HTTPForbidden('Solo un admin puede modificar el rol');
   }
 
   const user = await userRepository.findById(userId);
@@ -63,6 +67,7 @@ export const updateUserProfile = (userRepository: IUserRepository) => async (
     city: input.city ?? user.city,
     state: input.state ?? user.state,
     country: input.country ?? user.country,
+    role: requesterRole === 'admin' ? (input.role ?? user.role) : user.role,
     updatedAt: new Date(),
   });
 };

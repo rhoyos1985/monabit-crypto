@@ -1,6 +1,6 @@
 import { SupabaseClient, AuthUser } from '@supabase/supabase-js';
 import { IAuthService } from '../application/ports.js';
-import { User, AuthToken, AuthCredentials, AuthResult } from '../domain/types.js';
+import { User, AuthToken, AuthCredentials, AuthResult, UserRole } from '../domain/types.js';
 import { HTTPConflict, HTTPUnauthorized, HTTPBadRequest } from '../../../shared/http-error.js';
 import logger from '../../../shared/logger.js';
 
@@ -36,7 +36,7 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
     country: profile.country || undefined,
     avatarUrl: profile.avatar_url || undefined,
     authProvider: profile.auth_provider || 'email',
-    role: (profile.role || 'user') as 'admin' | 'user',
+    role: (profile.role || 'user') as UserRole,
     isActive: profile.is_active,
     createdAt: new Date(profile.created_at),
     updatedAt: new Date(profile.updated_at),

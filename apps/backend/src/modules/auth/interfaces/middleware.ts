@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { User } from '../domain/types.js';
+import { User, UserRole } from '../domain/types.js';
 import { HTTPUnauthorized, HTTPForbidden } from '../../../shared/http-error.js';
 
 export interface AuthRequest extends Request {
@@ -63,7 +63,7 @@ export const createRequireAuthMiddleware =
       country: profileData.country || undefined,
       avatarUrl: profileData.avatar_url || undefined,
       authProvider: profileData.auth_provider || 'email',
-      role: (profileData.role || 'user') as 'admin' | 'user',
+      role: (profileData.role || 'user') as UserRole,
       isActive: profileData.is_active,
       createdAt: new Date(profileData.created_at),
       updatedAt: new Date(profileData.updated_at),

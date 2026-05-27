@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import type { User } from '../domain/types.js';
+import type { User, UserRole } from '../domain/types.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
 import type { CityLocation } from '../../locations/domain/types.js';
 
@@ -122,7 +122,7 @@ interface UserFormSubmitInput {
   state?: string;
   country?: string;
   password: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 interface UserFormProps {
@@ -145,7 +145,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const [lastName, setLastName] = useState('');
   const [location, setLocation] = useState<CityLocation | null>(null);
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'user'>('user');
+  const [role, setRole] = useState<UserRole>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -242,8 +242,8 @@ const UserForm: React.FC<UserFormProps> = ({
           <Select
             id="role"
             value={role}
-            onChange={(e) => setRole(e.target.value as 'admin' | 'user')}
-            disabled={isLoading || isSubmitting || !!initialUser}
+            onChange={(e) => setRole(e.target.value as UserRole)}
+            disabled={isLoading || isSubmitting}
           >
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>

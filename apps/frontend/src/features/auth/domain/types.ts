@@ -1,3 +1,5 @@
+export type UserRole = 'admin' | 'user';
+
 export interface User {
   id: string;
   email: string;
@@ -8,7 +10,7 @@ export interface User {
   country?: string;
   avatarUrl?: string;
   authProvider: 'email' | 'google';
-  role: 'admin' | 'user';
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

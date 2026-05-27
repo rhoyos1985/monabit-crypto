@@ -17,6 +17,7 @@ export const updateUserProfileSchema = z.object({
   city: z.string().max(100).optional(),
   state: z.string().max(100).optional(),
   country: z.string().max(100).optional(),
+  role: z.enum(['admin', 'user']).optional(),
 });
 
 export const userResponseSchema = z.object({

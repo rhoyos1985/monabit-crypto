@@ -1,3 +1,7 @@
+import type { UserRole } from '../../auth/domain/types.js';
+
+export type { UserRole };
+
 export interface UserDTO {
   id: string;
   email: string;
@@ -8,7 +12,7 @@ export interface UserDTO {
   country?: string;
   avatarUrl?: string;
   authProvider: 'email' | 'google';
-  role: 'admin' | 'user';
+  role: UserRole;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -22,7 +26,7 @@ export interface CreateUserInput {
   city?: string;
   state?: string;
   country?: string;
-  role?: 'admin' | 'user';
+  role?: UserRole;
 }
 
 export interface AuthCredentials {
@@ -51,10 +55,10 @@ export interface UpdateUserProfileInput {
 export interface DeactivateUserInput {
   userId: string;
   requesterId: string;
-  requesterRole: 'admin' | 'user';
+  requesterRole: UserRole;
 }
 
 export interface ListUsersInput {
   requesterId: string;
-  requesterRole: 'admin' | 'user';
+  requesterRole: UserRole;
 }
