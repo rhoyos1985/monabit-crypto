@@ -26,4 +26,11 @@ export interface IAuthService {
    * Cerrar sesión del usuario (por ahora es no-op, pero queda disponible).
    */
   logoutUser(): Promise<void>;
+
+  /**
+   * Cambiar la contraseña del usuario autenticado.
+   * Solo permitido si el authProvider del usuario es 'email'.
+   * Requiere validar la contraseña actual antes del cambio.
+   */
+  changePassword(userId: string, email: string, currentPassword: string, newPassword: string): Promise<void>;
 }

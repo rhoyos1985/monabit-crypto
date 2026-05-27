@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth, useUpdateProfile } from '../application/hooks.js';
+import { useAuth, useUpdateProfile, useChangePassword } from '../application/hooks.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
 import { useToast } from '../../../shared/ui/Toast/ToastProvider.js';
@@ -200,12 +200,18 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const updateProfile = useUpdateProfile();
+  const changePassword = useChangePassword();
   const { showSuccess, showError } = useToast();
 
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [location, setLocation] = useState<CityLocation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const [currentPassword, setCurrentPassword] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
   useEffect(() => {
     if (user) {
@@ -248,6 +254,40 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+
+    if (newPassword.length < 8) {
+      showError('La nueva contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showError('La confirmación no coincide con la nueva contraseña');
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      showError('La nueva contraseña debe ser diferente a la actual');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      showSuccess('Contraseña actualizada exitosamente');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'No se pudo cambiar la contraseña');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const canChangePassword = user.authProvider === 'email';
 
   return (
     <Container>
@@ -319,6 +359,65 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
             </ButtonRow>
           </Form>
         </Card>
+
+        {canChangePassword && (
+          <Card style={{ marginTop: 24 }}>
+            <PageTitle>Cambiar contraseña</PageTitle>
+            <Subtitle>
+              Ingresa tu contraseña actual y luego la nueva. Mínimo 8 caracteres.
+            </Subtitle>
+            <Form onSubmit={handleChangePassword}>
+              <FormGroup>
+                <Label htmlFor="currentPassword">Contraseña actual</Label>
+                <Input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  disabled={isChangingPassword}
+                  autoComplete="current-password"
+                />
+              </FormGroup>
+              <Row>
+                <FormGroup>
+                  <Label htmlFor="newPassword">Nueva contraseña</Label>
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    disabled={isChangingPassword}
+                    autoComplete="new-password"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="confirmPassword">Confirmar nueva contraseña</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    disabled={isChangingPassword}
+                    autoComplete="new-password"
+                  />
+                </FormGroup>
+              </Row>
+              <ButtonRow>
+                <Button type="submit" disabled={isChangingPassword}>
+                  {isChangingPassword ? 'Cambiando...' : 'Cambiar contraseña'}
+                </Button>
+              </ButtonRow>
+            </Form>
+          </Card>
+        )}
       </Content>
     </Container>
   );

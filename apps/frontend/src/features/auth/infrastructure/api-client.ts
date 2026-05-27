@@ -1,5 +1,5 @@
 import type { AuthResult, LoginInput, RegisterInput, UpdateProfileInput, User } from '../domain/types.js';
-import type { IAuthRepository } from '../ports/index.js';
+import type { IAuthRepository, ChangePasswordInput } from '../ports/index.js';
 import { API_BASE_URL } from '../../../shared/config.js';
 import { supabase } from '../../../shared/supabase.js';
 
@@ -90,5 +90,9 @@ export const createAuthRepository = (): IAuthRepository => ({
 
   async updateMe(input: UpdateProfileInput, token: string): Promise<User> {
     return makeRequest<User>('PATCH', '/users/me', input, token);
+  },
+
+  async changePassword(input: ChangePasswordInput, token: string): Promise<void> {
+    await makeRequest<{ success: boolean }>('POST', '/auth/change-password', input, token);
   },
 });

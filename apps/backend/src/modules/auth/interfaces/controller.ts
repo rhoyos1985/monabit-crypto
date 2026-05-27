@@ -1,6 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthCredentials } from '../domain/types.js';
-import { registerSchema, loginSchema, authResultResponseSchema, userResponseSchema } from './schemas.js';
+import {
+  registerSchema,
+  loginSchema,
+  changePasswordSchema,
+  authResultResponseSchema,
+  userResponseSchema,
+  ChangePasswordRequest,
+} from './schemas.js';
 import { IAuthService } from '../application/ports.js';
 import { registerUser, loginUser } from '../application/use-cases.js';
 import { HTTPBadRequest, HTTPUnauthorized } from '../../../shared/http-error.js';
@@ -119,5 +126,42 @@ export const createAuthController = (authService: IAuthService) => {
     }
   };
 
-  return { registerHandler, loginHandler, logoutHandler, getMeHandler };
+  const changePasswordHandler = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      if (!req.user) {
+        throw new HTTPUnauthorized('No autenticado');
+      }
+
+      const parsed = changePasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const errorMessages = Object.entries(parsed.error.flatten().fieldErrors)
+          .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+          .join('; ');
+        throw new HTTPBadRequest(`Datos inválidos: ${errorMessages}`, {
+          error: 'Validation failed',
+          details: parsed.error.flatten(),
+        });
+      }
+
+      const input: ChangePasswordRequest = parsed.data;
+      await authService.changePassword(
+        req.user.id,
+        req.user.email,
+        input.currentPassword,
+        input.newPassword
+      );
+
+      res
+        .status(200)
+        .json(createApiResponse({ success: true }, 'Contraseña actualizada exitosamente', HttpStatusCode.OK));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  return { registerHandler, loginHandler, logoutHandler, getMeHandler, changePasswordHandler };
 };

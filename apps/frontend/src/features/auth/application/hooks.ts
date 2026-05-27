@@ -4,6 +4,7 @@ import type { RootState, AppDispatch } from '../../../app/store.js';
 import { setLoading, setError, setSession, clearSession, setUser } from '../../../app/slices/session.js';
 import { createAuthRepository } from '../infrastructure/api-client.js';
 import type { LoginInput, RegisterInput, UpdateProfileInput } from '../domain/types.js';
+import type { ChangePasswordInput } from '../ports/index.js';
 
 const authRepository = createAuthRepository();
 
@@ -97,6 +98,31 @@ export const useUpdateProfile = () => {
         return updatedUser;
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'No se pudo actualizar el perfil';
+        dispatch(setError(errorMsg));
+        throw error;
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [dispatch, token]
+  );
+};
+
+export const useChangePassword = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const token = useSelector((state: RootState) => state.session.token);
+
+  return useCallback(
+    async (input: ChangePasswordInput) => {
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
+      dispatch(setLoading(true));
+      dispatch(setError(null));
+      try {
+        await authRepository.changePassword(input, token);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'No se pudo cambiar la contraseña';
         dispatch(setError(errorMsg));
         throw error;
       } finally {

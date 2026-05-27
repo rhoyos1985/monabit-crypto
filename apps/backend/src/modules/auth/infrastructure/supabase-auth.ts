@@ -167,10 +167,57 @@ export const createSupabaseAuthService = (supabase: SupabaseClient): IAuthServic
     return Promise.resolve();
   };
 
+  const changePassword = async (
+    userId: string,
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    const profileResult = await supabase
+      .from('profiles')
+      .select('auth_provider')
+      .eq('id', userId)
+      .single<{ auth_provider: 'email' | 'google' }>();
+
+    if (profileResult.error || !profileResult.data) {
+      throw new HTTPBadRequest('No se pudo obtener el perfil del usuario.');
+    }
+
+    if (profileResult.data.auth_provider !== 'email') {
+      throw new HTTPBadRequest(
+        'No puedes cambiar tu contraseña porque iniciaste sesión con Google. Gestiona tu contraseña desde tu cuenta de Google.'
+      );
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      throw new HTTPUnauthorized('La contraseña actual es incorrecta.');
+    }
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
+
+    if (updateError) {
+      logger.error('Failed to change user password', {
+        userId,
+        errorMessage: updateError.message,
+      });
+      throw new HTTPBadRequest('No se pudo actualizar la contraseña. Por favor, intenta de nuevo.');
+    }
+
+    logger.info('User password changed successfully', { userId });
+  };
+
   return {
     registerUser,
     loginUser,
     getCurrentUser,
     logoutUser,
+    changePassword,
   };
 };

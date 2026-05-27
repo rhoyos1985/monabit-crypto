@@ -16,6 +16,16 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'La contraseña actual es requerida'),
+    newPassword: z.string().min(8, 'La nueva contraseña debe tener al menos 8 caracteres'),
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'La nueva contraseña debe ser diferente a la actual',
+    path: ['newPassword'],
+  });
+
 export const authTokenResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string().optional(),
@@ -46,4 +56,5 @@ export const authResultResponseSchema = z.object({
 
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
+export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>;
 export type AuthResultResponse = z.infer<typeof authResultResponseSchema>;
