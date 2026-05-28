@@ -120,10 +120,17 @@ resource "google_cloud_run_v2_service" "backend" {
     percent = 100
   }
 
-  # La imagen la gestiona el pipeline (deploy-cloudrun con la etiqueta :sha),
-  # no Terraform. Evita el conflicto de doble gestion y el drift en cada apply.
+  # El pipeline (deploy-cloudrun) es el dueno de la revision desplegada: imagen,
+  # labels (commit-sha, managed-by) y los annotations client/client_version que
+  # estampa gcloud. Terraform ignora esos campos para no crear revisiones que
+  # pisen lo que despliega el pipeline ni generar drift en cada apply.
   lifecycle {
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].labels,
+      client,
+      client_version,
+    ]
   }
 
   depends_on = [
@@ -170,10 +177,17 @@ resource "google_cloud_run_v2_service" "frontend" {
     percent = 100
   }
 
-  # La imagen la gestiona el pipeline (deploy-cloudrun con la etiqueta :sha),
-  # no Terraform. Evita el conflicto de doble gestion y el drift en cada apply.
+  # El pipeline (deploy-cloudrun) es el dueno de la revision desplegada: imagen,
+  # labels (commit-sha, managed-by) y los annotations client/client_version que
+  # estampa gcloud. Terraform ignora esos campos para no crear revisiones que
+  # pisen lo que despliega el pipeline ni generar drift en cada apply.
   lifecycle {
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].labels,
+      client,
+      client_version,
+    ]
   }
 
   depends_on = [google_project_service.enabled]
