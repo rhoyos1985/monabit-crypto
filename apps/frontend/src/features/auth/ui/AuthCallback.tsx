@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { supabase } from '../../../shared/supabase.js';
@@ -58,12 +58,12 @@ const AuthCallback: React.FC<AuthCallbackProps> = () => {
         const user = await authRepository.getCurrentUser(token);
 
         dispatch(setSession({ user, token }));
-        navigate('/dashboard');
+        void navigate({ to: '/dashboard' });
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Error al procesar autenticación';
         dispatch(setError(errorMsg));
         dispatch(clearSession());
-        navigate('/login');
+        void navigate({ to: '/login' });
       }
     };
 

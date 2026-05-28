@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '../../auth/application/hooks.js';
 import { useMarketOverview } from '../application/hooks.js';
 import { usePreferences } from '../../preferences/application/hooks.js';
@@ -126,7 +126,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
   return (
     <Container>
       <Header>
-        <Title onClick={() => navigate('/dashboard')}>MonaBit Dashboard</Title>
+        <Title onClick={() => void navigate({ to: '/dashboard' })}>MonaBit Dashboard</Title>
         <UserInfo>
           {user?.role === 'admin' && <NavLink to="/users">Usuarios</NavLink>}
           <UserMenu />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useRegister, useGoogleLogin } from '../application/hooks.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
@@ -243,7 +243,7 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
         state: location.state,
         country: location.country,
       });
-      navigate('/dashboard');
+      void navigate({ to: '/dashboard' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo registrar el usuario');
     } finally {
@@ -343,7 +343,7 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
           Continuar con Google
         </GoogleButton>
         <LinkText>
-          ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+          ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
         </LinkText>
       </Card>
     </Container>

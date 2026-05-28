@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useAuth, useUpdateProfile, useChangePassword } from '../application/hooks.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
@@ -292,11 +292,11 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
   return (
     <Container>
       <Header>
-        <HeaderTitle onClick={() => navigate('/dashboard')}>MonaBit Dashboard</HeaderTitle>
+        <HeaderTitle onClick={() => void navigate({ to: '/dashboard' })}>MonaBit Dashboard</HeaderTitle>
         <UserMenu />
       </Header>
       <Content>
-        <BackButton type="button" onClick={() => navigate('/dashboard')}>
+        <BackButton type="button" onClick={() => void navigate({ to: '/dashboard' })}>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
@@ -350,7 +350,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
               />
             </FormGroup>
             <ButtonRow>
-              <Button type="button" $variant="secondary" onClick={() => navigate('/dashboard')} disabled={isSubmitting}>
+              <Button type="button" $variant="secondary" onClick={() => void navigate({ to: '/dashboard' })} disabled={isSubmitting}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

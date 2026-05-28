@@ -1,11 +1,11 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { RouterProvider } from 'react-router-dom';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './store.js';
-import { router } from './router.js';
 import { ToastProvider } from '../shared/ui/Toast/ToastProvider.js';
 import AppThemeProvider from '../features/preferences/ui/AppThemeProvider.js';
+import { routeTree } from '../routeTree.gen';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,13 +17,21 @@ const queryClient = new QueryClient({
   },
 });
 
+const router = createRouter({ routeTree });
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 const App: React.FC = () => {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <AppThemeProvider>
           <ToastProvider>
-            <RouterProvider router={router} future={{ v7_startTransition: true }} />
+            <RouterProvider router={router} />
           </ToastProvider>
         </AppThemeProvider>
       </QueryClientProvider>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useAuth, useLogout } from '../../features/auth/application/hooks.js';
 import { usePreferences, useUpdatePreferences } from '../../features/preferences/application/hooks.js';
@@ -209,13 +209,13 @@ const UserMenu: React.FC<UserMenuProps> = () => {
 
   const handleSettings = (): void => {
     setIsOpen(false);
-    navigate('/settings');
+    void navigate({ to: '/settings' });
   };
 
   const handleLogout = async (): Promise<void> => {
     setIsOpen(false);
     await logout();
-    navigate('/login');
+    void navigate({ to: '/login' });
   };
 
   const handleThemeChange = (theme: 'light' | 'dark'): void => {

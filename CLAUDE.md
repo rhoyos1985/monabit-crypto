@@ -24,7 +24,11 @@ No sobre-ingenierizar: cada decision debe justificarse contra un requisito real.
 
 ### Frontend (`apps/frontend/`)
 - React 19+ con Vite, TypeScript estricto.
-- React Router para enrutamiento (rutas tipadas, rutas privadas protegidas).
+- TanStack Router para enrutamiento (file-based routing en `src/routes/`, rutas
+  totalmente tipadas, rutas privadas protegidas). El plugin `@tanstack/router-plugin`
+  genera `src/routeTree.gen.ts`. Las rutas son thin wrappers que importan los
+  componentes de page de cada feature (`features/*/ui/`); la protección de rutas
+  se mantiene con los componentes `ProtectedRoute`/`AdminRoute`.
 - TanStack Query para cache de servidor (datos cripto, listados de usuarios).
 - Redux Toolkit SOLO para estado global de UI y sesion. NUNCA para cache de
   servidor: esa responsabilidad es exclusiva de TanStack Query.

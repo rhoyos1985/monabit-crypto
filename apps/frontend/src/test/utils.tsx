@@ -4,13 +4,11 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from 'styled-components';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
 import sessionReducer, { SessionState } from '../app/slices/session.js';
 import { lightTheme } from '../shared/theme.js';
 
 interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   preloadedSession?: Partial<SessionState>;
-  route?: string;
 }
 
 export const buildTestStore = (preloadedSession?: Partial<SessionState>) =>
@@ -44,7 +42,7 @@ type RenderWithProvidersResult = RenderResult & {
 
 export const renderWithProviders = (
   ui: ReactElement,
-  { preloadedSession, route = '/', ...options }: RenderWithProvidersOptions = {}
+  { preloadedSession, ...options }: RenderWithProvidersOptions = {}
 ): RenderWithProvidersResult => {
   const store = buildTestStore(preloadedSession);
   const queryClient = buildTestQueryClient();
@@ -52,9 +50,7 @@ export const renderWithProviders = (
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={lightTheme}>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-        </ThemeProvider>
+        <ThemeProvider theme={lightTheme}>{children}</ThemeProvider>
       </QueryClientProvider>
     </Provider>
   );

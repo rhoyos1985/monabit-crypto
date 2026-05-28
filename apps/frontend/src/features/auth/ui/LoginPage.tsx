@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useLogin, useGoogleLogin } from '../application/hooks.js';
 
@@ -210,7 +210,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
 
     try {
       await login({ email, password });
-      navigate('/dashboard');
+      void navigate({ to: '/dashboard' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -271,7 +271,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
           Continuar con Google
         </GoogleButton>
         <LinkText>
-          ¿No tienes cuenta? <a href="/register">Regístrate</a>
+          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
         </LinkText>
       </Card>
     </Container>

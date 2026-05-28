@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import type { User, UserRole } from '../domain/types.js';
 import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser } from '../application/hooks.js';
 import UsersTable from './UsersTable.js';
@@ -223,11 +223,11 @@ const UsersPage: React.FC = () => {
   return (
     <Container>
       <Header>
-        <HeaderTitle onClick={() => navigate('/dashboard')}>MonaBit Dashboard</HeaderTitle>
+        <HeaderTitle onClick={() => void navigate({ to: '/dashboard' })}>MonaBit Dashboard</HeaderTitle>
         <UserMenu />
       </Header>
       <PageContainer>
-        <BackButton type="button" onClick={() => navigate('/dashboard')}>
+        <BackButton type="button" onClick={() => void navigate({ to: '/dashboard' })}>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
