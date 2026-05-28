@@ -120,6 +120,12 @@ resource "google_cloud_run_v2_service" "backend" {
     percent = 100
   }
 
+  # La imagen la gestiona el pipeline (deploy-cloudrun con la etiqueta :sha),
+  # no Terraform. Evita el conflicto de doble gestion y el drift en cada apply.
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
+  }
+
   depends_on = [
     google_project_service.enabled,
     google_secret_manager_secret_version.app_secrets_version,
@@ -162,6 +168,12 @@ resource "google_cloud_run_v2_service" "frontend" {
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
+  }
+
+  # La imagen la gestiona el pipeline (deploy-cloudrun con la etiqueta :sha),
+  # no Terraform. Evita el conflicto de doble gestion y el drift en cada apply.
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
   }
 
   depends_on = [google_project_service.enabled]
