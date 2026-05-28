@@ -66,24 +66,31 @@ app.use('/preferences', createPreferencesRouter(supabase));
 // Middleware de error (siempre al final)
 app.use(errorHandler);
 
-// Iniciar servidor
-const start = async (): Promise<void> => {
+// Tareas de arranque (migraciones + seed). No deben bloquear el listen ni
+// tumbar el proceso: Cloud Run exige responder el startup probe rápido, y un
+// fallo de seed (idempotente y reintentable) no debe dejar la API caída.
+const runStartupTasks = async (): Promise<void> => {
   try {
     await runMigrations(supabase);
 
     const adminEmail = process.env.SEED_ADMIN_EMAIL ?? '';
     const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? '';
     await seedAdmin(supabase, adminEmail, adminPassword);
-
-    app.listen(PORT, () => {
-      logger.info(`Backend running on port ${PORT}`);
-    });
   } catch (err) {
-    logger.error('Failed to start server', {
+    logger.error('Error en tareas de arranque (migraciones/seed)', {
       error: err instanceof Error ? err.message : String(err),
     });
-    process.exit(1);
   }
+};
+
+// Iniciar servidor: escuchar primero (para pasar el startup probe de Cloud Run)
+// y luego ejecutar las tareas de arranque en segundo plano.
+const start = (): void => {
+  app.listen(PORT, () => {
+    logger.info(`Backend running on port ${PORT}`);
+  });
+
+  void runStartupTasks();
 };
 
 void start();
