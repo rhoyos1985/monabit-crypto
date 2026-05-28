@@ -8,8 +8,8 @@ export const useMarketOverview = () => {
   return useQuery<MarketOverview, Error>({
     queryKey: ['marketOverview'],
     queryFn: () => marketRepository.getMarketOverview(),
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // 60 seconds
+    staleTime: 40000, // 30 seconds
+    refetchInterval: 70000, // 60 seconds
     refetchOnWindowFocus: true,
     retry: 2,
   });

@@ -16,6 +16,7 @@ RUN yarn install --frozen-lockfile
 # Copiar configuración base y código fuente
 COPY tsconfig.base.json ./
 COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/tsconfig.build.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
 
 WORKDIR /app/apps/backend
@@ -41,6 +42,7 @@ RUN yarn install --frozen-lockfile
 # Copiar configuración base y código fuente
 COPY tsconfig.base.json ./
 COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/tsconfig.build.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
 
 WORKDIR /app/apps/backend
