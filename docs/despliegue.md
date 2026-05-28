@@ -86,6 +86,21 @@ gsutil iam ch \
   gs://monabit-terraform-state
 ```
 
+### 3.2. Permisos amplios del deployer para Terraform en CI
+
+Para que `terraform apply` corra en GitHub Actions y gestione toda la infra
+(APIs, IAM del proyecto, service accounts, Workload Identity, secrets y Artifact
+Registry), la SA del deployer recibe roles de administrador definidos en `iam.tf`
+(`deployer_terraform_admin`): `serviceusage.serviceUsageAdmin`,
+`resourcemanager.projectIamAdmin`, `iam.serviceAccountAdmin`,
+`iam.workloadIdentityPoolAdmin`, `secretmanager.admin` y `artifactregistry.admin`.
+
+Es un compromiso consciente: la SA de CI queda con privilegios casi de Owner a
+cambio de IaC totalmente automatizada. Como estos roles los concede el propio
+Terraform, el **primer `apply` que los introduce debe hacerse en local** (con una
+cuenta humana con Owner). A partir de ahí, CI ya tiene permisos para aplicarse a
+sí mismo en las siguientes corridas.
+
 ### 4. Obtener los identificadores para GitHub
 
 ```bash

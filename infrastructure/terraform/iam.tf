@@ -40,6 +40,26 @@ resource "google_project_iam_member" "deployer_service_account_user" {
   member  = "serviceAccount:${google_service_account.github_deployer.email}"
 }
 
+# Roles adicionales para que el deployer aplique TODA la infraestructura via
+# Terraform desde GitHub Actions: habilitar APIs, gestionar IAM del proyecto,
+# service accounts, Workload Identity, secrets y Artifact Registry.
+# Compromiso consciente: concede privilegios amplios (casi de administrador) a la
+# SA de CI a cambio de IaC 100% automatizada. La cadena de confianza arranca en
+# el primer apply local (ejecutado por un humano con Owner).
+resource "google_project_iam_member" "deployer_terraform_admin" {
+  for_each = toset([
+    "roles/serviceusage.serviceUsageAdmin",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.workloadIdentityPoolAdmin",
+    "roles/secretmanager.admin",
+    "roles/artifactregistry.admin",
+  ])
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.github_deployer.email}"
+}
+
 # Permisos de logging y monitoring para los servicios runtime
 resource "google_project_iam_member" "backend_logging" {
   project = var.project_id
