@@ -55,6 +55,10 @@ La primera vez se aplica Terraform localmente porque aún no hay deployer. En la
 cd infrastructure/terraform
 cp terraform.tfvars.example terraform.tfvars
 # Editar terraform.tfvars con los valores reales (Supabase URL, keys, etc.)
+# IMPORTANTE: github_repository debe ser tu repo real en formato owner/repo
+# Si se deja el placeholder, el provider de
+# Workload Identity rechaza el token de GitHub Actions con "unauthorized_client:
+# rejected by the attribute condition".
 
 terraform init -backend-config="bucket=monabit-terraform-state"
 terraform apply
@@ -66,6 +70,21 @@ Esto crea:
 - Secretos en Secret Manager.
 - Workload Identity Pool y Provider para GitHub Actions.
 - Servicios Cloud Run (vacíos hasta el primer push de imagen).
+
+### 3.1. Dar acceso al deployer sobre el bucket de estado
+
+El bucket de estado se crea manualmente (paso 2) y no lo gestiona Terraform, por lo
+que la SA del deployer no tiene permiso sobre él por defecto. En el `apply` local se
+usan tus credenciales de `gcloud`, pero en GitHub Actions Terraform usa la SA del
+deployer; sin este permiso, `terraform init` falla con
+`storage.objects.list ... denied`. Concede el acceso una sola vez (la SA ya existe
+tras el paso 3):
+
+```bash
+gsutil iam ch \
+  "serviceAccount:monabit-prod-deployer@monabit-crypto.iam.gserviceaccount.com:roles/storage.objectAdmin" \
+  gs://monabit-terraform-state
+```
 
 ### 4. Obtener los identificadores para GitHub
 

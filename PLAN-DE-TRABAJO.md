@@ -30,8 +30,8 @@ Tareas:
    los neutros, segun `CLAUDE.md` seccion 4.7. Configurar el `ThemeProvider`.
 
 Definition of Done:
-- `npm run dev` levanta frontend y backend sin errores.
-- `npm run lint` y `npm run typecheck` pasan en ambas apps.
+- `yarn dev` levanta frontend y backend sin errores.
+- `yarn lint` y `yarn typecheck` pasan en ambas apps.
 - Un commit que viole Conventional Commits es rechazado por Husky.
 - El tema de colores existe como tokens y esta disponible via `ThemeProvider`.
 
@@ -60,9 +60,9 @@ Tareas:
 2. Documentar el arranque de la base de datos local con `supabase start`, que
    levanta Postgres, Auth y Studio en contenedores gestionados por la CLI de
    Supabase. Aplicar migraciones y el seed del admin con `supabase db reset`.
-3. Documentar el arranque del backend: `npm install` y `npm run dev` en
+3. Documentar el arranque del backend: `yarn install` y `yarn dev` en
    `apps/backend`, leyendo `apps/backend/.env`.
-4. Documentar el arranque del frontend: `npm install` y `npm run dev` en
+4. Documentar el arranque del frontend: `yarn install` y `yarn dev` en
    `apps/frontend`, leyendo `apps/frontend/.env`.
 5. Documentar el orden recomendado (base de datos, luego backend, luego
    frontend) y como verificar que cada parte responde.
@@ -90,7 +90,7 @@ Tareas:
    la aplicacion es accesible.
 
 Definition of Done:
-- Via A: con `supabase start` mas `npm run dev` en cada app, el proyecto corre
+- Via A: con `supabase start` mas `yarn dev` en cada app, el proyecto corre
   en local y se puede validar funcionalidad por funcionalidad.
 - Via B: `docker compose up --build` levanta backend, frontend y base de datos,
   con los servicios esperando a que sus dependencias esten sanas.
@@ -424,7 +424,7 @@ Tareas:
 1. README con: descripcion, stack, e instrucciones de ejecucion local paso a
    paso por las dos vias definidas en la Fase 0.5: con Docker Compose
    (`docker compose up --build`) y sin Docker Compose (`supabase start` mas
-   `npm run dev` por app). Incluir prerequisitos y orden de arranque.
+   `yarn dev` por app). Incluir prerequisitos y orden de arranque.
 2. README con explicacion general de arquitectura (hexagonal ligera, modulos,
    features).
 3. Documentar variables de entorno con valores de ejemplo.
