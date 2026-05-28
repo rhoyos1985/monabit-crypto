@@ -44,26 +44,32 @@ curl http://localhost:8080/health     # Backend health check
 curl http://localhost:5173/           # Frontend (debería cargar HTML)
 ```
 
-### Opción B: Desarrollo local (con Docker Compose) - Entorno reproducible
+### Opción B: Desarrollo local (con Docker Compose)
 
-**1. Configurar variables de entorno:**
+Esta opción requiere que Supabase ya esté corriendo en el host (vía `supabase start`).
+
+**1. Iniciar Supabase en el host:**
 ```bash
-cp .env.docker.example .env.docker
-# (Opcional) Actualizar variables de ejemplo
+supabase start    # Supabase corre en localhost:54321
 ```
 
-**2. Levantar todo con un solo comando:**
+**2. Crear `.env` en la raíz con las claves reales de Supabase:**
+```env
+SUPABASE_SERVICE_ROLE_KEY=<service_role-key-de-supabase-status>
+SUPABASE_ANON_KEY=<anon-key-de-supabase-status>
+```
+
+**3. Levantar backend y frontend en contenedores:**
 ```bash
 docker compose up --build
 ```
+Los contenedores se conectan a Supabase via `host.docker.internal:54321`.
 
-Espera a que los servicios pasen sus health checks (5-15 segundos):
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8080
-- Supabase Auth: http://localhost:9999
-- PostgreSQL: localhost:5432
+- Supabase Studio: http://localhost:54323
 
-**3. Detener el entorno:**
+**4. Detener el entorno:**
 ```bash
 docker compose down
 ```

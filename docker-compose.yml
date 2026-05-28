@@ -20,8 +20,9 @@ services:
     environment:
       PORT: 8080
       SUPABASE_URL: http://host.docker.internal:54321
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjM4OTYyNDAwLCJleHAiOjE5NjY1MzgwMDB9.DaYlNEVBx6U8-j6sSHeSeYBxSxs1FBJibowQtqKVNmY}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzODk2MjQwMCwiZXhwIjoxOTY2NTM4MDAwfQ.K5yD3dBI4VQpFWMkL5L2z1_UVTHvGZ2p0BzxDt_3zAc}
+      # Valores reales se inyectan via .env en la raiz (ver SETUP / README)
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?Set SUPABASE_SERVICE_ROLE_KEY in .env}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in .env}
       COINGECKO_API_BASE: https://api.coingecko.com/api/v3
       COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
       CORS_ORIGIN: http://localhost:5173
@@ -54,7 +55,7 @@ services:
     environment:
       VITE_API_BASE_URL: http://localhost:8080
       VITE_SUPABASE_URL: http://localhost:54321
-      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzODk2MjQwMCwiZXhwIjoxOTY2NTM4MDAwfQ.K5yD3dBI4VQpFWMkL5L2z1_UVTHvGZ2p0BzxDt_3zAc}
+      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in .env}
     ports:
       - "5173:5173"
     volumes:
