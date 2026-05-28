@@ -156,4 +156,5 @@ const swaggerOptions = {
   apis: ['./src/modules/**/*.ts'],
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 export const swaggerSpec = swaggerJsdoc(swaggerOptions);
