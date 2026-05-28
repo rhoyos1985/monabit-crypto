@@ -41,11 +41,11 @@ jobs:
               - 'supabase/migrations/**'
               - 'supabase/config.toml'
 
-  # Tests obligatorios antes de cualquier deploy. Threshold 95% lo enforza Jest/Vitest.
+  # GATE de calidad: SIEMPRE corre en push a main / manual, sin depender de
+  # paths-filter (que en el primer push o ciertos merges no detecta bien el diff).
+  # Threshold 95% lo enforza Jest/Vitest. Si falla, no se despliega nada.
   backend-test:
     name: Backend - Tests + Coverage >= 95% (GATE)
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,8 +68,6 @@ jobs:
 
   frontend-test:
     name: Frontend - Tests + Coverage >= 95% (GATE)
-    needs: changes
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
