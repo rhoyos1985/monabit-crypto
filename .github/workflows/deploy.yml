@@ -20,7 +20,7 @@ jobs:
       infra: ${{ steps.filter.outputs.infra }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: dorny/paths-filter@v3
@@ -51,8 +51,8 @@ jobs:
       run:
         working-directory: apps/backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'yarn'
@@ -75,8 +75,8 @@ jobs:
       run:
         working-directory: apps/frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'yarn'
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -131,7 +131,7 @@ jobs:
     outputs:
       image_uri: ${{ steps.image.outputs.uri }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Auth to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
@@ -172,7 +172,7 @@ jobs:
     outputs:
       image_uri: ${{ steps.image.outputs.uri }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v2
@@ -218,7 +218,7 @@ jobs:
       id-token: write
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v2
@@ -243,7 +243,7 @@ jobs:
       id-token: write
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v2
@@ -281,7 +281,7 @@ jobs:
       TF_VAR_backend_image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend:latest
       TF_VAR_frontend_image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v2

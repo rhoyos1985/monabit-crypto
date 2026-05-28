@@ -17,6 +17,10 @@ apps/frontend/src/**/*.js
 apps/frontend/src/**/*.js.map
 apps/backend/src/**/*.d.ts
 apps/backend/src/**/*.d.ts.map
+# Excepciones: archivos .d.ts que son fuente (no generados), necesarios para typecheck/lint
+!apps/frontend/src/shared/styled.d.ts
+!apps/frontend/src/vite-env.d.ts
+!apps/backend/src/shared/swagger-jsdoc.d.ts
 
 # Config files exceptions
 !vite.config.ts
