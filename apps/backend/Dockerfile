@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Copiar archivos de configuración del monorepo
 COPY package.json yarn.lock ./
-COPY .yarnrc.yml ./
 
 # Copiar package.json de apps (workspaces)
 COPY apps/backend/package.json ./apps/backend/
