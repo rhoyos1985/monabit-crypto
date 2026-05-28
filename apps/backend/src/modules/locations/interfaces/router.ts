@@ -5,7 +5,7 @@
  *   description: Ciudades y departamentos para registro y perfil
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { createApiColombiaClient } from '../infrastructure/api-colombia-client.js';
 import { createApiResponse } from '../../../shared/api-response.js';
 import { HttpStatusCode } from '../../../shared/http-error.js';
@@ -37,14 +37,16 @@ export const createLocationsRouter = (): Router => {
    *                   country: { type: string }
    *                   label: { type: string }
    */
-  router.get('/cities', async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const getCitiesHandler = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const cities = await locationProvider.getCities();
       res.status(200).json(createApiResponse(cities, 'Ciudades obtenidas exitosamente', HttpStatusCode.OK));
     } catch (error) {
       next(error);
     }
-  });
+  };
+
+  router.get('/cities', getCitiesHandler as RequestHandler);
 
   return router;
 };

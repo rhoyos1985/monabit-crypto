@@ -121,9 +121,9 @@ export const runMigrations = async (supabase: SupabaseClient): Promise<void> => 
     let executedCount = 0;
     for (const statement of statements) {
       try {
-        // Use the internal query method to execute raw SQL
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).rpc('exec_sql', { sql: statement });
+        // Ejecuta SQL crudo via RPC. Si la función exec_sql no existe en la BD,
+        // el catch lo absorbe (las migraciones reales las aplica supabase db push).
+        await supabase.rpc('exec_sql', { sql: statement });
       } catch {
         // If rpc doesn't exist, migrations may be managed by Supabase itself
         // or tables may already exist. This is acceptable in development.

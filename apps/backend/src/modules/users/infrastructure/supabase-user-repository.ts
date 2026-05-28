@@ -37,27 +37,35 @@ const mapProfileToUser = (profile: Profile): UserDTO => ({
 
 export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRepository => {
   const findById = async (id: string): Promise<UserDTO | null> => {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .single<Profile>();
 
     if (error || !data) return null;
 
-    return mapProfileToUser(data as Profile);
+    return mapProfileToUser(data);
   };
 
   const findByEmail = async (email: string): Promise<UserDTO | null> => {
-    const { data, error } = await supabase.from('profiles').select('*').eq('email', email).single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .single<Profile>();
 
     if (error || !data) return null;
 
-    return mapProfileToUser(data as Profile);
+    return mapProfileToUser(data);
   };
 
   const listAll = async (): Promise<UserDTO[]> => {
-    const { data, error } = await supabase.from('profiles').select('*');
+    const result = await supabase.from('profiles').select('*');
 
-    if (error || !data) return [];
+    if (result.error || !result.data) return [];
 
-    return data.map((profile: Profile) => mapProfileToUser(profile));
+    return (result.data as Profile[]).map((profile) => mapProfileToUser(profile));
   };
 
   const create = async (user: CreateUserInput & { id: string }): Promise<UserDTO> => {
@@ -76,7 +84,7 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
         is_active: true,
       })
       .select()
-      .single();
+      .single<Profile>();
 
     if (error || !data) {
       if (error?.message?.includes('duplicate')) {
@@ -85,7 +93,7 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
       throw new HTTPBadRequest(`Error al crear usuario: ${error?.message || 'Error desconocido'}`);
     }
 
-    return mapProfileToUser(data as Profile);
+    return mapProfileToUser(data);
   };
 
   const update = async (id: string, data: Partial<UserDTO>): Promise<UserDTO> => {
@@ -124,13 +132,13 @@ export const createSupabaseUserRepository = (supabase: SupabaseClient): IUserRep
       .update(updateData)
       .eq('id', id)
       .select()
-      .single();
+      .single<Profile>();
 
     if (error || !updatedProfile) {
       throw new HTTPBadRequest(`Error al actualizar usuario: ${error?.message || 'Error desconocido'}`);
     }
 
-    return mapProfileToUser(updatedProfile as Profile);
+    return mapProfileToUser(updatedProfile);
   };
 
   return { findById, findByEmail, listAll, create, update };

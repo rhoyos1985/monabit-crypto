@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --loader ts-node/esm --no-warnings=ExperimentalWarning src/server.ts",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
