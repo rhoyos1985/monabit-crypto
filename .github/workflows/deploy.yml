@@ -92,8 +92,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    outputs:
-      image_uri: ${{ steps.image.outputs.uri }}
     steps:
       - uses: actions/checkout@v5
 
@@ -133,8 +131,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    outputs:
-      image_uri: ${{ steps.image.outputs.uri }}
     steps:
       - uses: actions/checkout@v5
 
@@ -194,7 +190,7 @@ jobs:
         with:
           service: monabit-prod-backend
           region: ${{ env.GCP_REGION }}
-          image: ${{ needs.backend-build.outputs.image_uri }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend:${{ github.sha }}
 
   frontend-deploy:
     name: Frontend - Deploy to Cloud Run
@@ -218,7 +214,7 @@ jobs:
         with:
           service: monabit-prod-frontend
           region: ${{ env.GCP_REGION }}
-          image: ${{ needs.frontend-build.outputs.image_uri }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:${{ github.sha }}
 
   # Terraform aplica la infraestructura. terraform apply es idempotente:
   # si no hay cambios en el plan, no modifica nada.
