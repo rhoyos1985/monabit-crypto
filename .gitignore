@@ -61,6 +61,10 @@ coverage/
 # Excepciones: los archivos .example sí van al repo como plantilla
 !*.tfvars.example
 
+# Llaves criptográficas (nunca commitear)
+*.pem
+*.key
+
 # Supabase CLI temp files
 supabase/.branches/
 supabase/.temp/

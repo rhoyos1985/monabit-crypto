@@ -236,6 +236,8 @@ jobs:
       TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
       TF_VAR_seed_admin_email: ${{ secrets.SEED_ADMIN_EMAIL }}
       TF_VAR_seed_admin_password: ${{ secrets.SEED_ADMIN_PASSWORD }}
+      TF_VAR_crypto_private_key: ${{ secrets.CRYPTO_PRIVATE_KEY }}
+      TF_VAR_crypto_public_key: ${{ secrets.CRYPTO_PUBLIC_KEY }}
       TF_VAR_backend_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/monabit-prod/backend:latest
       TF_VAR_frontend_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/monabit-prod/frontend:latest
     steps:

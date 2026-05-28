@@ -33,6 +33,7 @@ module.exports = {
     'src/modules/locations/infrastructure/**/*.ts',
     'src/shared/api-response.ts',
     'src/shared/http-error.ts',
+    'src/shared/crypto-envelope.ts',
     '!src/**/*.test.ts',
   ],
   coverageDirectory: 'coverage',

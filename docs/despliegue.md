@@ -129,6 +129,8 @@ En `Settings → Secrets and variables → Actions` del repositorio crear:
 | `SUPABASE_ACCESS_TOKEN` | personal access token: https://supabase.com/dashboard/account/tokens |
 | `SUPABASE_PROJECT_REF` | identificador del proyecto (subdominio antes de `.supabase.co`) |
 | `SUPABASE_DB_PASSWORD` | password de la BD que pusiste al crear el proyecto Supabase |
+| `CRYPTO_PRIVATE_KEY` | llave privada RSA (PEM) para el cifrado de auth/users (ver `docs/cifrado.md`) |
+| `CRYPTO_PUBLIC_KEY` | llave pública RSA (PEM) para el cifrado de auth/users |
 
 ### 6. Configurar el entorno `production` en GitHub (opcional)
 

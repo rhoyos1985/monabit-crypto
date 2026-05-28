@@ -6,6 +6,7 @@ locals {
     supabase_service_role_key = var.supabase_service_role_key
     supabase_anon_key         = var.supabase_anon_key
     seed_admin_password       = var.seed_admin_password
+    crypto_private_key        = var.crypto_private_key
   }
 }
 

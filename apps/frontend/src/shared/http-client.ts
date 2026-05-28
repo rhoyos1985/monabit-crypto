@@ -1,4 +1,12 @@
 import { API_BASE_URL } from './config.js';
+import {
+  encryptEnvelope,
+  decryptEnvelope,
+  getClientKeys,
+  getBackendPublicKey,
+  isEncryptionEnabled,
+  type EncryptedMessage,
+} from './crypto.js';
 
 export interface ApiResponse<T> {
   httpStatus: string;
@@ -7,6 +15,14 @@ export interface ApiResponse<T> {
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+
+const SECURE_PREFIXES = ['/auth', '/users'];
+
+const isSecurePath = (path: string): boolean =>
+  SECURE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+
+const hasEncryptedMessage = (value: unknown): value is { message: EncryptedMessage } =>
+  typeof value === 'object' && value !== null && 'message' in value;
 
 const request = async <T>(
   method: HttpMethod,
@@ -19,9 +35,22 @@ const request = async <T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const secure = isSecurePath(path) && isEncryptionEnabled();
+  let privateKey: CryptoKey | null = null;
+  let outgoingBody = body;
+
+  if (secure) {
+    const [clientKeys, backendKey] = await Promise.all([getClientKeys(), getBackendPublicKey()]);
+    privateKey = clientKeys.privateKey;
+    headers['X-Client-Public-Key'] = clientKeys.publicKeyHeader;
+    if (body !== undefined) {
+      outgoingBody = { message: await encryptEnvelope(body, backendKey) };
+    }
+  }
+
   const options: RequestInit = { method, headers };
-  if (body !== undefined) {
-    options.body = JSON.stringify(body);
+  if (outgoingBody !== undefined) {
+    options.body = JSON.stringify(outgoingBody);
   }
 
   let response: Response;
@@ -31,12 +60,17 @@ const request = async <T>(
     throw new Error('No hay conexión con el servidor. Verifica tu conexión a Internet.');
   }
 
-  let data: ApiResponse<T>;
+  let raw: unknown;
   try {
-    data = (await response.json()) as ApiResponse<T>;
+    raw = await response.json();
   } catch {
     throw new Error('El servidor devolvió una respuesta inválida. Por favor, intenta de nuevo.');
   }
+
+  const data =
+    secure && privateKey && hasEncryptedMessage(raw)
+      ? ((await decryptEnvelope(raw.message, privateKey)) as ApiResponse<T>)
+      : (raw as ApiResponse<T>);
 
   if (!response.ok) {
     throw new Error(data.apiMessage || 'Error en la solicitud');
@@ -45,9 +79,6 @@ const request = async <T>(
   return data.apiData as T;
 };
 
-/**
- * Petición HTTP autenticada: adjunta el header Authorization: Bearer <token>.
- */
 export const fetchByAuth = <T>(
   method: HttpMethod,
   path: string,
@@ -55,19 +86,9 @@ export const fetchByAuth = <T>(
   body?: unknown
 ): Promise<T> => request<T>(method, path, body, token);
 
-/**
- * Petición HTTP pública: sin header de autorización.
- */
-export const fetchNoAuth = <T>(
-  method: HttpMethod,
-  path: string,
-  body?: unknown
-): Promise<T> => request<T>(method, path, body);
+export const fetchNoAuth = <T>(method: HttpMethod, path: string, body?: unknown): Promise<T> =>
+  request<T>(method, path, body);
 
-/**
- * Lee el token persistido en localStorage. Lanza error si no hay sesión.
- * Útil para repositorios cuyo caller no recibe el token explícitamente.
- */
 export const getStoredToken = (): string => {
   const token = localStorage.getItem('auth_token');
   if (!token) {
