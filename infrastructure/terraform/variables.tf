@@ -60,6 +60,17 @@ variable "seed_admin_password" {
   sensitive   = true
 }
 
+variable "crypto_private_key" {
+  description = "Llave privada RSA (PKCS8 PEM) para el cifrado de extremo a extremo del backend"
+  type        = string
+  sensitive   = true
+}
+
+variable "crypto_public_key" {
+  description = "Llave publica RSA (SPKI PEM) para el cifrado de extremo a extremo (publica)"
+  type        = string
+}
+
 variable "github_repository" {
   description = "Repositorio de GitHub en formato 'owner/repo' para Workload Identity Federation"
   type        = string

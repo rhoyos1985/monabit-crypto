@@ -95,6 +95,21 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "info"
       }
 
+      env {
+        name = "CRYPTO_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.app_secrets["crypto_private_key"].secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name  = "CRYPTO_PUBLIC_KEY"
+        value = var.crypto_public_key
+      }
+
       startup_probe {
         http_get {
           path = "/health"

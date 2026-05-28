@@ -12,6 +12,7 @@ Google Cloud Run.
 
 - Frontend: https://monabit-prod-frontend-mqeimenz4q-uc.a.run.app
 - Backend (API): https://monabit-prod-backend-mqeimenz4q-uc.a.run.app
+- Swagger: https://monabit-prod-backend-mqeimenz4q-uc.a.run.app/docs/
 - Health del backend: https://monabit-prod-backend-mqeimenz4q-uc.a.run.app/health
 
 ## Funcionalidades
@@ -144,6 +145,8 @@ propio archivo de ejemplo: `apps/backend/.env.example` y
 | `SEED_ADMIN_PASSWORD` | Contraseña del administrador inicial (seed). |
 | `LOG_LEVEL` | Nivel de log (`info`, `debug`, etc.). |
 | `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT` | Reservadas para observabilidad (ver limitaciones). |
+| `CRYPTO_PRIVATE_KEY` | Llave privada RSA (PEM) para el cifrado de auth/users. Obligatoria en producción. |
+| `CRYPTO_PUBLIC_KEY` | Llave pública RSA (PEM) para el cifrado de auth/users. |
 
 **Frontend (`apps/frontend/.env`):**
 
@@ -152,6 +155,7 @@ propio archivo de ejemplo: `apps/backend/.env.example` y
 | `VITE_API_BASE_URL` | URL pública del backend. |
 | `VITE_SUPABASE_URL` | URL del proyecto Supabase (`https://<ref>.supabase.co`, sin `/rest/v1`). |
 | `VITE_SUPABASE_ANON_KEY` | Clave anónima de Supabase (se embebe en el bundle). |
+| `VITE_ENCRYPTION_ENABLED` | Activa el cifrado de extremo a extremo en auth/users (`true` por defecto). |
 
 ## Proveedor de datos cripto
 
@@ -192,6 +196,10 @@ Se aplicaron las siguientes prácticas de seguridad:
 - En el pipeline, GitHub Actions se autentica contra Google Cloud mediante
   Workload Identity Federation (sin claves estáticas), y los secretos de la
   aplicación se gestionan con Secret Manager.
+- Cifrado de extremo a extremo (defensa en profundidad sobre HTTPS) en `/auth` y
+  `/users`: request y response viajan como un sobre híbrido (RSA-OAEP-256 +
+  A256GCM) con la estructura `{ message: { payload, signed } }`. Detalle en
+  [docs/cifrado.md](docs/cifrado.md).
 
 La configuración del inicio de sesión con Google se documenta en
 [docs/google-oauth.md](docs/google-oauth.md).
@@ -256,5 +264,6 @@ generado y en establecer las reglas de negocio y de estilo de codificación.
 - [docs/modelo-de-datos.md](docs/modelo-de-datos.md): modelo de datos y RLS.
 - [docs/despliegue.md](docs/despliegue.md): despliegue e infraestructura.
 - [docs/google-oauth.md](docs/google-oauth.md): configuración de login con Google.
+- [docs/cifrado.md](docs/cifrado.md): cifrado de extremo a extremo en auth y users.
 - [docs/setup-supabase.md](docs/setup-supabase.md): preparación de Supabase local.
 - `CLAUDE.md`: stack, arquitectura y reglas de código del proyecto.
