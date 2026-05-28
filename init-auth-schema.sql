@@ -1,3 +1,0 @@
--- Este archivo no se utiliza más.
--- Cuando usas 'supabase start', todas las migraciones se ejecutan automáticamente.
--- Este archivo se mantiene solo para compatibilidad si alguien intenta usar Docker solo.

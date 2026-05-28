@@ -53,6 +53,23 @@ resource "google_project_iam_member" "frontend_logging" {
   member  = "serviceAccount:${google_service_account.frontend_runtime.email}"
 }
 
+# Permitir que los runtime SA descarguen imagenes del Artifact Registry
+resource "google_artifact_registry_repository_iam_member" "backend_image_reader" {
+  project    = var.project_id
+  location   = google_artifact_registry_repository.monabit_docker.location
+  repository = google_artifact_registry_repository.monabit_docker.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.backend_runtime.email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "frontend_image_reader" {
+  project    = var.project_id
+  location   = google_artifact_registry_repository.monabit_docker.location
+  repository = google_artifact_registry_repository.monabit_docker.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.frontend_runtime.email}"
+}
+
 # Workload Identity Federation para GitHub Actions
 resource "google_iam_workload_identity_pool" "github" {
   workload_identity_pool_id = "monabit-github-${var.environment}"

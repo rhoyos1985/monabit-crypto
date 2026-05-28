@@ -35,7 +35,9 @@ Cada job de tests ejecuta `yarn test:coverage`, que falla automáticamente si la
 ```bash
 gcloud projects create monabit-crypto --name="MonaBit Crypto"
 gcloud config set project monabit-crypto
-gcloud billing projects link monabit-crypto --billing-account=BILLING_ACCOUNT_ID
+
+gcloud billing accounts list  // Se usa para obtener la información que se reemplaza en el BILLING_ACCOUNT_ID 
+gcloud billing projects link monabit-crypto --billing-account=BILLING_ACCOUNT_ID   
 ```
 
 ### 2. Crear bucket para el estado de Terraform
@@ -90,6 +92,9 @@ En `Settings → Secrets and variables → Actions` del repositorio crear:
 | `VITE_API_BASE_URL` | URL pública del backend en Cloud Run (output `backend_url` de Terraform) |
 | `VITE_SUPABASE_URL` | igual a `SUPABASE_URL` |
 | `VITE_SUPABASE_ANON_KEY` | igual a `SUPABASE_ANON_KEY` |
+| `SUPABASE_ACCESS_TOKEN` | personal access token: https://supabase.com/dashboard/account/tokens |
+| `SUPABASE_PROJECT_REF` | identificador del proyecto (subdominio antes de `.supabase.co`) |
+| `SUPABASE_DB_PASSWORD` | password de la BD que pusiste al crear el proyecto Supabase |
 
 ### 6. Configurar el entorno `production` en GitHub (opcional)
 
@@ -100,10 +105,23 @@ En `Settings → Environments → New environment → production` se puede agreg
 ## Flujo de despliegue automático
 
 1. Desarrollador hace push a `main` (o merge de PR).
-2. Workflow `Deploy` detecta qué cambió.
+2. Workflow `Deploy` detecta qué cambió (`paths-filter`).
 3. Jobs de tests corren (backend y/o frontend). **Si coverage < 95 %, todo el pipeline falla aquí.**
-4. Si tests pasan: build de imagen Docker → push a Artifact Registry → deploy a Cloud Run.
+4. Si tests pasan:
+   - **Migraciones** (si cambiaron `supabase/migrations/**` o si hay deploy de backend) → `supabase db push` contra Supabase Cloud.
+   - **Build** de imagen Docker → push a Artifact Registry.
+   - **Deploy** a Cloud Run (backend espera a que migraciones terminen para no servir un backend nuevo contra un schema viejo).
 5. Si cambió infraestructura: `terraform plan` y `terraform apply`.
+
+### Orden de dependencias del backend
+
+```
+backend-test ─┐
+              ├─→ backend-build ─┐
+migrations-apply ────────────────┴─→ backend-deploy
+```
+
+Si las migraciones fallan, el backend nuevo **no** se despliega — la revisión anterior sigue sirviendo tráfico.
 
 ## Variables de entorno en Cloud Run
 

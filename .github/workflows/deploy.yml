@@ -18,6 +18,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       infra: ${{ steps.filter.outputs.infra }}
+      migrations: ${{ steps.filter.outputs.migrations }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,6 +37,9 @@ jobs:
               - 'yarn.lock'
             infra:
               - 'infrastructure/terraform/**'
+            migrations:
+              - 'supabase/migrations/**'
+              - 'supabase/config.toml'
 
   # Tests obligatorios antes de cualquier deploy. Threshold 95% lo enforza Jest/Vitest.
   backend-test:
@@ -85,6 +89,35 @@ jobs:
         run: yarn typecheck
       - name: Tests con cobertura (falla si < 95%)
         run: yarn test:coverage
+
+  # Aplica migraciones a Supabase Cloud antes de que el backend nuevo arranque.
+  # Se ejecuta si cambiaron migraciones O si se va a desplegar backend (defensa por si
+  # el backend nuevo asume un schema que no estaba aplicado todavia).
+  migrations-apply:
+    name: Supabase - Apply migrations
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true' || needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link to Supabase project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Apply pending migrations
+        run: supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
   # Build + push de imagen backend SOLO si los tests pasaron y hubo cambios en backend
   backend-build:
@@ -175,7 +208,9 @@ jobs:
   # Deploy backend a Cloud Run (independiente)
   backend-deploy:
     name: Backend - Deploy to Cloud Run
-    needs: [changes, backend-build]
+    # Espera tanto al build como a las migraciones. Si las migraciones fallan,
+    # el backend nuevo no se despliega (la imagen previa sigue activa).
+    needs: [changes, backend-build, migrations-apply]
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:

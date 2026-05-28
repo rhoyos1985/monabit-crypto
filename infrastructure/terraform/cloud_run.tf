@@ -32,10 +32,8 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "production"
       }
 
-      env {
-        name  = "PORT"
-        value = "8080"
-      }
+      # PORT lo asigna Cloud Run automaticamente (variable reservada).
+      # El contenedor debe escuchar en process.env.PORT.
 
       env {
         name  = "SUPABASE_URL"
@@ -151,8 +149,12 @@ resource "google_cloud_run_v2_service" "frontend" {
       resources {
         limits = {
           cpu    = "1"
-          memory = "256Mi"
+          memory = "512Mi"
         }
+        # CPU throttled: solo se factura CPU durante el request.
+        # Permite memoria < 512Mi y reduce costos para servicios de archivos estaticos.
+        cpu_idle          = true
+        startup_cpu_boost = false
       }
     }
   }
