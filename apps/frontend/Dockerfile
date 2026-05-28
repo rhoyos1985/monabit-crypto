@@ -63,7 +63,10 @@ ENV VITE_HMR_PORT=5173
 CMD ["yarn", "dev", "--host", "0.0.0.0"]
 
 # Production stage (Nginx)
-FROM nginx:alpine AS production
+# Imagen unprivileged: corre como usuario no-root (uid 101) y escucha en 8080,
+# con pid y dirs temporales en rutas escribibles. La imagen nginx estandar falla
+# al arrancar como non-root en Cloud Run (no puede escribir /var/run/nginx.pid).
+FROM nginxinc/nginx-unprivileged:alpine AS production
 
 WORKDIR /usr/share/nginx/html
 
@@ -72,9 +75,6 @@ COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copiar build desde builder
 COPY --from=builder /app/apps/frontend/dist ./
-
-# Usuario nginx
-USER nginx
 
 # Exponer puerto (Cloud Run espera 8080)
 EXPOSE 8080
