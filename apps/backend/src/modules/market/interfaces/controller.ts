@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ICoinGeckoClient } from '../application/ports.js';
-import { getMarketOverview } from '../application/use-cases.js';
-import { marketOverviewResponseSchema } from './schemas.js';
+import { getMarketOverview, getCoinChart } from '../application/use-cases.js';
+import { marketOverviewResponseSchema, coinChartRangeSchema, coinChartResponseSchema } from './schemas.js';
 import { createApiResponse } from '../../../shared/api-response.js';
 import { HttpStatusCode } from '../../../shared/http-error.js';
 import { User } from '../../auth/domain/types.js';
@@ -38,5 +38,26 @@ export const createMarketController = (coinGeckoClient: ICoinGeckoClient) => {
     }
   };
 
-  return { getMarketOverviewHandler };
+  const getCoinChartHandler = async (
+    req: MarketRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const id = req.params.id ?? '';
+      const range = coinChartRangeSchema.parse(req.query.range);
+
+      const doGetCoinChart = getCoinChart(coinGeckoClient);
+      const chart = await doGetCoinChart({ id, range });
+
+      const formatted = coinChartResponseSchema.parse(chart);
+      res
+        .status(200)
+        .json(createApiResponse(formatted, 'Coin chart retrieved successfully', HttpStatusCode.OK));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  return { getMarketOverviewHandler, getCoinChartHandler };
 };
