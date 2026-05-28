@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '../../auth/application/hooks.js';
 import { useMarketOverview } from '../application/hooks.js';
 import { usePreferences } from '../../preferences/application/hooks.js';
+import type { CryptoData } from '../domain/types.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
 import CryptoTable from './CryptoTable.js';
+import CoinDetail from './CoinDetail.js';
 import MarketKPIs from './MarketKPIs.js';
 import PriceChangeChart from './PriceChangeChart.js';
 
@@ -115,6 +117,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
   const { user } = useAuth();
   const { data: marketData, isLoading, error } = useMarketOverview();
   const { data: preferences } = usePreferences();
+  const [selectedCoin, setSelectedCoin] = useState<CryptoData | null>(null);
 
   const favoriteCryptos = useMemo(() => {
     if (!marketData || !preferences || preferences.favoriteCoins.length === 0) {
@@ -147,10 +150,14 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
             <SectionTitle>Indicadores del mercado</SectionTitle>
             <MarketKPIs kpis={marketData.marketKpis} />
 
+            {selectedCoin && (
+              <CoinDetail coin={selectedCoin} onClose={() => setSelectedCoin(null)} />
+            )}
+
             {favoriteCryptos.length > 0 && (
               <>
                 <SectionTitle>Tus favoritas ★</SectionTitle>
-                <CryptoTable cryptos={favoriteCryptos} />
+                <CryptoTable cryptos={favoriteCryptos} onSelect={setSelectedCoin} />
               </>
             )}
 
@@ -158,7 +165,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
             <PriceChangeChart cryptos={marketData.topCryptos} />
 
             <SectionTitle>Top 10 criptomonedas</SectionTitle>
-            <CryptoTable cryptos={marketData.topCryptos} />
+            <CryptoTable cryptos={marketData.topCryptos} searchable onSelect={setSelectedCoin} />
             <LastUpdated>
               Última actualización: {new Date(marketData.lastFetched).toLocaleString('es-CO')}
             </LastUpdated>

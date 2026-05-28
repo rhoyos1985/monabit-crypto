@@ -28,3 +28,18 @@ export const marketOverviewResponseSchema = z.object({
 });
 
 export type MarketOverviewResponse = z.infer<typeof marketOverviewResponseSchema>;
+
+export const coinChartRangeSchema = z.enum(['day', 'week']).default('day');
+
+const coinChartPointSchema = z.object({
+  timestamp: z.number(),
+  price: z.number(),
+});
+
+export const coinChartResponseSchema = z.object({
+  id: z.string(),
+  range: z.enum(['day', 'week']),
+  points: z.array(coinChartPointSchema),
+});
+
+export type CoinChartResponse = z.infer<typeof coinChartResponseSchema>;

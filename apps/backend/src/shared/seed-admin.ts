@@ -8,14 +8,6 @@ interface ExistingProfile {
   role: UserRole;
 }
 
-/**
- * Seed del usuario admin inicial. Idempotente:
- * - Si ya existe con rol admin: no hace nada.
- * - Si existe con rol user: lo promueve a admin.
- * - Si no existe: lo crea (auth.users + promoción del profile a admin).
- *
- * Requiere que `supabase` esté inicializado con la service_role key.
- */
 const seedAdmin = async (
   supabase: SupabaseClient,
   adminEmail: string,

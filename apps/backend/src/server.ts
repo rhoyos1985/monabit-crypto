@@ -1,6 +1,7 @@
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { createClient } from '@supabase/supabase-js';
@@ -20,11 +21,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
-// Inicializar cliente Supabase
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -40,7 +55,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   },
 });
 
-// Swagger UI
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 app.use('/docs', swaggerUi.serve as any);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
@@ -51,24 +65,18 @@ app.get('/docs.json', (_req, res) => {
   res.send(swaggerSpec as any);
 });
 
-// Rutas de salud
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Rutas de módulos
-app.use('/auth', createAuthRouter(supabase));
-app.use('/users', createUsersRouter(supabase));
-app.use('/market', createMarketRouter(supabase));
-app.use('/locations', createLocationsRouter());
-app.use('/preferences', createPreferencesRouter(supabase));
+app.use('/auth', authLimiter, createAuthRouter(supabase));
+app.use('/users', generalLimiter, createUsersRouter(supabase));
+app.use('/market', generalLimiter, createMarketRouter(supabase));
+app.use('/locations', generalLimiter, createLocationsRouter());
+app.use('/preferences', generalLimiter, createPreferencesRouter(supabase));
 
-// Middleware de error (siempre al final)
 app.use(errorHandler);
 
-// Tareas de arranque (migraciones + seed). No deben bloquear el listen ni
-// tumbar el proceso: Cloud Run exige responder el startup probe rápido, y un
-// fallo de seed (idempotente y reintentable) no debe dejar la API caída.
 const runStartupTasks = async (): Promise<void> => {
   try {
     await runMigrations(supabase);
@@ -83,8 +91,6 @@ const runStartupTasks = async (): Promise<void> => {
   }
 };
 
-// Iniciar servidor: escuchar primero (para pasar el startup probe de Cloud Run)
-// y luego ejecutar las tareas de arranque en segundo plano.
 const start = (): void => {
   app.listen(PORT, () => {
     logger.info(`Backend running on port ${PORT}`);

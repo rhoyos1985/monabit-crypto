@@ -63,4 +63,24 @@ describe('MarketRepository (api-client)', () => {
     const repo = createMarketRepository();
     await expect(repo.getMarketOverview()).rejects.toThrow(/respuesta inválida/i);
   });
+
+  it('GET /market/coins/:id/chart con token devuelve el chart', async () => {
+    localStorage.setItem('auth_token', 'jwt');
+    fetchSpy.mockResolvedValueOnce(
+      apiResponse({ id: 'bitcoin', range: 'day', points: [{ timestamp: 1, price: 50000 }] })
+    );
+    const repo = createMarketRepository();
+    const result = await repo.getCoinChart('bitcoin', 'day');
+
+    expect(result).toBeDefined();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/market/coins/bitcoin/chart?range=day'),
+      expect.anything()
+    );
+  });
+
+  it('getCoinChart lanza error cuando no hay token', async () => {
+    const repo = createMarketRepository();
+    await expect(repo.getCoinChart('bitcoin', 'week')).rejects.toThrow(/sesión/i);
+  });
 });

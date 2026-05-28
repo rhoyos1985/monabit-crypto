@@ -1,5 +1,12 @@
 import { ICoinGeckoClient } from '../application/ports.js';
-import { MarketOverview, CryptoData, MarketKPIs } from '../domain/types.js';
+import {
+  MarketOverview,
+  CryptoData,
+  MarketKPIs,
+  CoinChart,
+  CoinChartPoint,
+  ChartRange,
+} from '../domain/types.js';
 import logger from '../../../shared/logger.js';
 import { AppError, HttpStatusCode } from '../../../shared/http-error.js';
 
@@ -25,7 +32,11 @@ interface CoinGeckoGlobalData {
   };
 }
 
-const CACHE_TTL_MS = 60000; // 60 seconds
+interface CoinGeckoMarketChart {
+  prices: [number, number][];
+}
+
+const CACHE_TTL_MS = 60000;
 
 const mapCryptoData = (crypto: CoinGeckoCrypto): CryptoData => ({
   id: crypto.id,
@@ -51,6 +62,7 @@ const mapGlobalData = (global: CoinGeckoGlobalData): MarketKPIs => ({
 export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {
   let cachedOverview: MarketOverview | null = null;
   let cacheExpireTime = 0;
+  const chartCache = new Map<string, { data: CoinChart; expire: number }>();
 
   const isCacheValid = (): boolean => {
     return cachedOverview !== null && Date.now() < cacheExpireTime;
@@ -110,6 +122,49 @@ export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {
     }
   };
 
+  const getCoinChart = async (id: string, range: ChartRange): Promise<CoinChart> => {
+    const cacheKey = `${id}:${range}`;
+    const cached = chartCache.get(cacheKey);
+    if (cached && Date.now() < cached.expire) {
+      return cached.data;
+    }
+
+    const days = range === 'week' ? 7 : 1;
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/coins/${encodeURIComponent(id)}/market_chart?vs_currency=usd&days=${days}`
+      );
+
+      if (!response.ok) {
+        throw new AppError(
+          'No se pudo obtener el historial de precios de la criptomoneda. Por favor, intenta de nuevo más tarde.',
+          HttpStatusCode.SERVICE_UNAVAILABLE
+        );
+      }
+
+      const data = (await response.json()) as CoinGeckoMarketChart;
+      const points: CoinChartPoint[] = data.prices.map((p) => ({
+        timestamp: p[0],
+        price: p[1],
+      }));
+      const chart: CoinChart = { id, range, points };
+
+      chartCache.set(cacheKey, { data: chart, expire: Date.now() + CACHE_TTL_MS });
+
+      return chart;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('CoinGecko chart fetch failed', { coinId: id, range, error: errorMessage });
+
+      if (cached) {
+        return cached.data;
+      }
+
+      throw error;
+    }
+  };
+
   return {
     getMarketOverview: async (): Promise<MarketOverview> => {
       if (isCacheValid()) {
@@ -119,5 +174,6 @@ export const createCoinGeckoClient = (apiBaseUrl: string): ICoinGeckoClient => {
 
       return fetchFromApi();
     },
+    getCoinChart,
   };
 };

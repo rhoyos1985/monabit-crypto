@@ -13,7 +13,7 @@ const usersMocks = vi.hoisted(() => ({
   deactivateUser: vi.fn(),
 }));
 
-const marketMocks = vi.hoisted(() => ({ getMarketOverview: vi.fn() }));
+const marketMocks = vi.hoisted(() => ({ getMarketOverview: vi.fn(), getCoinChart: vi.fn() }));
 
 const prefsMocks = vi.hoisted(() => ({
   getMyPreferences: vi.fn(),
@@ -42,7 +42,7 @@ import {
   useUpdateUser,
   useDeactivateUser,
 } from '../features/users/application/hooks.js';
-import { useMarketOverview } from '../features/dashboard/application/hooks.js';
+import { useMarketOverview, useCoinChart } from '../features/dashboard/application/hooks.js';
 import {
   usePreferences,
   useUpdatePreferences,
@@ -107,6 +107,7 @@ describe('Users feature hooks', () => {
 describe('Dashboard feature hooks', () => {
   beforeEach(() => {
     marketMocks.getMarketOverview.mockReset();
+    marketMocks.getCoinChart.mockReset();
   });
 
   it('useMarketOverview carga el overview', async () => {
@@ -119,6 +120,19 @@ describe('Dashboard feature hooks', () => {
     await waitFor(() => {
       expect(result.current.data).toBeDefined();
     });
+  });
+
+  it('useCoinChart se deshabilita cuando el id es null', async () => {
+    const { result } = renderHook(() => useCoinChart(null, 'day'), { wrapper: buildWrapper() });
+    await waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
+    expect(marketMocks.getCoinChart).not.toHaveBeenCalled();
+  });
+
+  it('useCoinChart carga la gráfica con id y rango', async () => {
+    marketMocks.getCoinChart.mockResolvedValueOnce({ id: 'bitcoin', range: 'week', points: [] });
+    const { result } = renderHook(() => useCoinChart('bitcoin', 'week'), { wrapper: buildWrapper() });
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    expect(marketMocks.getCoinChart).toHaveBeenCalledWith('bitcoin', 'week');
   });
 });
 

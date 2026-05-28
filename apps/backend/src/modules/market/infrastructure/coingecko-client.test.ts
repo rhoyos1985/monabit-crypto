@@ -107,4 +107,74 @@ describe('CoinGeckoClient', () => {
     const result = await client.getMarketOverview();
     expect(result.topCryptos[0]?.symbol).toBe('BTC');
   });
+
+  const mockChartResponse = {
+    prices: [
+      [1716768000000, 50000],
+      [1716771600000, 51000],
+    ],
+  };
+
+  it('getCoinChart hace fetch y mapea prices a points', async () => {
+    fetchSpy.mockResolvedValueOnce({ ok: true, json: async () => mockChartResponse } as Response);
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+
+    const chart = await client.getCoinChart('bitcoin', 'day');
+
+    expect(chart.id).toBe('bitcoin');
+    expect(chart.range).toBe('day');
+    expect(chart.points).toHaveLength(2);
+    expect(chart.points[0]).toEqual({ timestamp: 1716768000000, price: 50000 });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/coins/bitcoin/market_chart?vs_currency=usd&days=1')
+    );
+  });
+
+  it('getCoinChart usa days=7 para el rango week', async () => {
+    fetchSpy.mockResolvedValueOnce({ ok: true, json: async () => mockChartResponse } as Response);
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+
+    await client.getCoinChart('ethereum', 'week');
+
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('days=7'));
+  });
+
+  it('getCoinChart cachea por id+range dentro del TTL', async () => {
+    fetchSpy.mockResolvedValue({ ok: true, json: async () => mockChartResponse } as Response);
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+
+    await client.getCoinChart('bitcoin', 'day');
+    await client.getCoinChart('bitcoin', 'day');
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('getCoinChart devuelve cache si una llamada posterior falla', async () => {
+    fetchSpy.mockResolvedValueOnce({ ok: true, json: async () => mockChartResponse } as Response);
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+    const first = await client.getCoinChart('bitcoin', 'day');
+
+    jest.useFakeTimers();
+    jest.advanceTimersByTime(120_000);
+
+    fetchSpy.mockRejectedValueOnce(new Error('CoinGecko down'));
+    const second = await client.getCoinChart('bitcoin', 'day');
+
+    expect(second).toEqual(first);
+    jest.useRealTimers();
+  });
+
+  it('getCoinChart lanza error si la respuesta no es ok y no hay cache', async () => {
+    fetchSpy.mockResolvedValueOnce({ ok: false, json: async () => ({}) } as Response);
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+
+    await expect(client.getCoinChart('bitcoin', 'day')).rejects.toThrow();
+  });
+
+  it('getCoinChart lanza error si fetch falla en la primera llamada (sin cache)', async () => {
+    fetchSpy.mockRejectedValue(new Error('Network error'));
+    const client = createCoinGeckoClient('https://api.coingecko.com/api/v3');
+
+    await expect(client.getCoinChart('bitcoin', 'day')).rejects.toThrow();
+  });
 });

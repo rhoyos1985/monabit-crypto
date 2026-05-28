@@ -121,12 +121,11 @@ export const runMigrations = async (supabase: SupabaseClient): Promise<void> => 
     let executedCount = 0;
     for (const statement of statements) {
       try {
-        // Ejecuta SQL crudo via RPC. Si la función exec_sql no existe en la BD,
-        // el catch lo absorbe (las migraciones reales las aplica supabase db push).
         await supabase.rpc('exec_sql', { sql: statement });
-      } catch {
-        // If rpc doesn't exist, migrations may be managed by Supabase itself
-        // or tables may already exist. This is acceptable in development.
+      } catch (err) {
+        logger.debug('Migration statement skipped', {
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
       executedCount += 1;
     }
@@ -136,6 +135,5 @@ export const runMigrations = async (supabase: SupabaseClient): Promise<void> => 
     logger.error('Failed to run migrations', {
       error: err instanceof Error ? err.message : String(err),
     });
-    // Don't exit - migrations might be managed by Supabase itself
   }
 };

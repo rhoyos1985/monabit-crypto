@@ -9,7 +9,7 @@ export const createMarketRouter = (supabase: SupabaseClient) => {
 
   const apiBaseUrl = process.env.COINGECKO_API_BASE || 'https://api.coingecko.com/api/v3';
   const coinGeckoClient = createCoinGeckoClient(apiBaseUrl);
-  const { getMarketOverviewHandler } = createMarketController(coinGeckoClient);
+  const { getMarketOverviewHandler, getCoinChartHandler } = createMarketController(coinGeckoClient);
   const requireAuth = createRequireAuthMiddleware(supabase);
 
   /**
@@ -46,6 +46,57 @@ export const createMarketRouter = (supabase: SupabaseClient) => {
     '/overview',
     requireAuth as RequestHandler,
     getMarketOverviewHandler as RequestHandler
+  );
+
+  /**
+   * @swagger
+   * /market/coins/{id}/chart:
+   *   get:
+   *     tags:
+   *       - Market
+   *     summary: Get price history for a coin
+   *     description: Returns the price history of a coin for a day or week range. Requires authentication.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: CoinGecko coin id (e.g. bitcoin)
+   *       - in: query
+   *         name: range
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [day, week]
+   *           default: day
+   *         description: Time range of the chart
+   *     responses:
+   *       200:
+   *         description: Coin chart retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponse'
+   *       401:
+   *         description: Unauthorized - missing or invalid JWT
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   *       503:
+   *         description: Upstream market data provider unavailable
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
+  router.get(
+    '/coins/:id/chart',
+    requireAuth as RequestHandler,
+    getCoinChartHandler as RequestHandler
   );
 
   return router;

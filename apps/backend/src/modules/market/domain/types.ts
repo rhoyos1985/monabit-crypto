@@ -25,9 +25,27 @@ export interface MarketOverview {
   lastFetched: string;
 }
 
+export type ChartRange = 'day' | 'week';
+
+export interface CoinChartPoint {
+  timestamp: number;
+  price: number;
+}
+
+export interface CoinChart {
+  id: string;
+  range: ChartRange;
+  points: CoinChartPoint[];
+}
+
 import type { UserRole } from '../../auth/domain/types.js';
 
 export interface GetMarketOverviewInput {
   requesterId: string;
   requesterRole: UserRole;
+}
+
+export interface GetCoinChartInput {
+  id: string;
+  range: ChartRange;
 }

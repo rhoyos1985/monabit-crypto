@@ -24,3 +24,16 @@ export interface MarketOverview {
   marketKpis: MarketKPIs;
   lastFetched: string;
 }
+
+export type ChartRange = 'day' | 'week';
+
+export interface CoinChartPoint {
+  timestamp: number;
+  price: number;
+}
+
+export interface CoinChart {
+  id: string;
+  range: ChartRange;
+  points: CoinChartPoint[];
+}
