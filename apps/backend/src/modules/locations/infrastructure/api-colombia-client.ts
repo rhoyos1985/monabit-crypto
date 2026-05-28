@@ -14,7 +14,7 @@ interface ApiColombiaCity {
   departmentId: number;
 }
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h: ciudades casi nunca cambian
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const COUNTRY_NAME = 'Colombia';
 
 export const createApiColombiaClient = (baseUrl: string): ILocationProvider => {

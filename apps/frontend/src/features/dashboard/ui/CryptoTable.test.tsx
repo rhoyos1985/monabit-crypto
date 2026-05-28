@@ -101,11 +101,11 @@ describe('CryptoTable', () => {
 
     await user.click(screen.getByText(/Nombre/));
     let rows = screen.getAllByRole('row');
-    expect(within(rows[1]).getByText('Bitcoin')).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText('Bitcoin')).toBeInTheDocument();
 
     await user.click(screen.getByText(/Nombre/));
     rows = screen.getAllByRole('row');
-    expect(within(rows[1]).getByText('Ethereum')).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText('Ethereum')).toBeInTheDocument();
   });
 
   it('permite ordenar por las distintas columnas', async () => {

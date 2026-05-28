@@ -8,7 +8,6 @@ export const registerSchema = z.object({
   city: z.string().min(1, 'La ciudad es requerida').max(100),
   state: z.string().min(1, 'El departamento es requerido').max(100),
   country: z.string().min(1, 'El país es requerido').max(100),
-  // Ignorar cualquier campo 'role' que venga en el body
 });
 
 export const loginSchema = z.object({

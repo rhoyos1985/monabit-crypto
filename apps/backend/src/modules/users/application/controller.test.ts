@@ -32,13 +32,11 @@ const buildMockSupabase = (config: {
 }): jest.Mocked<SupabaseClient> => {
   const callerProfile = config.callerProfile ?? buildProfileRow();
 
-  // Cada llamada a from() devuelve una nueva chain
   const fromMock = jest.fn((table: string) => {
     const handler = config.fromHandlers?.[table];
     return handler ? handler() : buildPassthroughChain();
   });
 
-  // Chain por defecto para auth middleware (single para profile lookup)
   const buildPassthroughChain = () => {
     const c = {
       select: jest.fn(),
@@ -60,7 +58,10 @@ const buildMockSupabase = (config: {
       signInWithPassword: jest.fn(),
       getUser: jest
         .fn()
-        .mockResolvedValue({ data: { user: buildAuthUser(config.authUserId ?? 'admin-1') }, error: null }),
+        .mockResolvedValue({
+          data: { user: buildAuthUser(config.authUserId ?? 'admin-1') },
+          error: null,
+        }),
       admin: { updateUserById: jest.fn() },
     },
     from: fromMock,
@@ -93,7 +94,6 @@ describe('Users router (integración)', () => {
       const supabase = buildMockSupabase({
         fromHandlers: {
           profiles: () => {
-            // Primera llamada: middleware (single). Las siguientes (select sin eq) devuelven array.
             let callCount = 0;
             const chain = {
               select: jest.fn(),
@@ -103,7 +103,7 @@ describe('Users router (integración)', () => {
             chain.select.mockImplementation(() => {
               callCount += 1;
               if (callCount === 1) return chain;
-              // segunda llamada select('*') de listAll devuelve promise con array
+
               return Promise.resolve({
                 data: [buildProfileRow(), buildProfileRow({ id: 'u-2', email: 'b@b.com' })],
                 error: null,
@@ -137,7 +137,7 @@ describe('Users router (integración)', () => {
               update: jest.fn(),
               single: jest.fn().mockImplementation(() => {
                 call += 1;
-                // 1: middleware, 2: findById, 3: update.select.single
+
                 if (call === 1) {
                   return Promise.resolve({
                     data: buildProfileRow({ id: 'u-1', role: 'user' }),

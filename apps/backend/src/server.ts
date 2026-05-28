@@ -40,7 +40,6 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Inicializar cliente Supabase
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -56,7 +55,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   },
 });
 
-// Swagger UI
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 app.use('/docs', swaggerUi.serve as any);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
@@ -67,7 +65,6 @@ app.get('/docs.json', (_req, res) => {
   res.send(swaggerSpec as any);
 });
 
-// Rutas de salud
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -78,12 +75,8 @@ app.use('/market', generalLimiter, createMarketRouter(supabase));
 app.use('/locations', generalLimiter, createLocationsRouter());
 app.use('/preferences', generalLimiter, createPreferencesRouter(supabase));
 
-// Middleware de error (siempre al final)
 app.use(errorHandler);
 
-// Tareas de arranque (migraciones + seed). No deben bloquear el listen ni
-// tumbar el proceso: Cloud Run exige responder el startup probe rápido, y un
-// fallo de seed (idempotente y reintentable) no debe dejar la API caída.
 const runStartupTasks = async (): Promise<void> => {
   try {
     await runMigrations(supabase);
@@ -98,8 +91,6 @@ const runStartupTasks = async (): Promise<void> => {
   }
 };
 
-// Iniciar servidor: escuchar primero (para pasar el startup probe de Cloud Run)
-// y luego ejecutar las tareas de arranque en segundo plano.
 const start = (): void => {
   app.listen(PORT, () => {
     logger.info(`Backend running on port ${PORT}`);

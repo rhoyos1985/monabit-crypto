@@ -8,8 +8,6 @@ const logFormat = winston.format.combine(
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// En produccion (Cloud Run) se loguea en JSON a stdout, donde la plataforma
-// recoge los logs. En desarrollo se usa salida coloreada y legible.
 const consoleFormat = isProduction
   ? logFormat
   : winston.format.combine(
@@ -32,9 +30,7 @@ const logger = winston.createLogger({
   format: logFormat,
   transports: [
     new winston.transports.Console({ format: consoleFormat }),
-    // Transports de archivo solo en desarrollo: en Cloud Run el filesystem es
-    // efimero y el proceso corre como usuario sin permiso de escritura, lo que
-    // provoca EACCES al hacer mkdir 'logs'. Los logs de prod salen por stdout.
+
     ...(isProduction
       ? []
       : [
