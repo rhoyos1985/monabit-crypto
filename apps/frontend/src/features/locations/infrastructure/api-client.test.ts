@@ -41,14 +41,14 @@ describe('LocationsRepository (api-client)', () => {
     expect(cities).toEqual([]);
   });
 
-  it('lanza error cuando el response no es ok', async () => {
+  it('lanza error con el apiMessage del backend cuando el response no es ok', async () => {
     fetchSpy.mockResolvedValueOnce({
       ok: false,
       status: 503,
-      json: async () => ({ apiData: null }),
-    } as Response);
+      json: async () => ({ httpStatus: '503', apiMessage: 'Servicio no disponible', apiData: null }),
+    } as unknown as Response);
 
     const repo = createLocationsRepository();
-    await expect(repo.getCities()).rejects.toThrow(/listado de ciudades/i);
+    await expect(repo.getCities()).rejects.toThrow('Servicio no disponible');
   });
 });

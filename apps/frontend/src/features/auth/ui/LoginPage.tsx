@@ -234,7 +234,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
       <Card>
         <Title>Iniciar sesión</Title>
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={(e) => void handleSubmit(e)}>
           <FormGroup>
             <Label htmlFor="email">Email</Label>
             <Input
@@ -266,7 +266,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
           </Button>
         </Form>
         <Divider>O</Divider>
-        <GoogleButton type="button" onClick={handleGoogleLogin} disabled={isLoading}>
+        <GoogleButton type="button" onClick={() => void handleGoogleLogin()} disabled={isLoading}>
           <GoogleIcon />
           Continuar con Google
         </GoogleButton>

@@ -67,7 +67,7 @@ const AuthCallback: React.FC<AuthCallbackProps> = () => {
       }
     };
 
-    processCallback();
+    void processCallback();
   }, [dispatch, navigate]);
 
   return (

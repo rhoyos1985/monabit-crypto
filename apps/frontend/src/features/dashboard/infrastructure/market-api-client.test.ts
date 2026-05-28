@@ -59,7 +59,7 @@ describe('MarketRepository (api-client)', () => {
       json: async () => {
         throw new Error('bad json');
       },
-    } as Response);
+    } as unknown as Response);
     const repo = createMarketRepository();
     await expect(repo.getMarketOverview()).rejects.toThrow(/respuesta inválida/i);
   });

@@ -1,79 +1,26 @@
 import type { AuthResult, LoginInput, RegisterInput, UpdateProfileInput, User } from '../domain/types.js';
 import type { IAuthRepository, ChangePasswordInput } from '../ports/index.js';
-import { API_BASE_URL } from '../../../shared/config.js';
+import { fetchByAuth, fetchNoAuth } from '../../../shared/http-client.js';
 import { supabase } from '../../../shared/supabase.js';
-
-interface ApiResponse<T> {
-  httpStatus: string;
-  apiMessage: string;
-  apiData: T | null;
-}
-
-const makeRequest = async <T>(
-  method: string,
-  path: string,
-  body?: unknown,
-  token?: string
-): Promise<T> => {
-  const url = `${API_BASE_URL}${path}`;
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  if (token) {
-    options.headers = {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    };
-  }
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  let response: Response;
-  try {
-    response = await fetch(url, options);
-  } catch (err) {
-    throw new Error('No hay conexión con el servidor. Verifica tu conexión a Internet.');
-  }
-
-  let data: ApiResponse<T>;
-  try {
-    data = (await response.json()) as ApiResponse<T>;
-  } catch {
-    throw new Error('El servidor devolvió una respuesta inválida. Por favor, intenta de nuevo.');
-  }
-
-  if (!response.ok) {
-    const errorMessage = data.apiMessage || 'Error en la solicitud';
-    throw new Error(errorMessage);
-  }
-
-  return data.apiData as T;
-};
 
 export const createAuthRepository = (): IAuthRepository => ({
   async register(input: RegisterInput): Promise<AuthResult> {
-    return makeRequest<AuthResult>('POST', '/auth/register', input);
+    return fetchNoAuth<AuthResult>('POST', '/auth/register', input);
   },
 
   async login(input: LoginInput): Promise<AuthResult> {
-    return makeRequest<AuthResult>('POST', '/auth/login', input);
+    return fetchNoAuth<AuthResult>('POST', '/auth/login', input);
   },
 
   async logout(): Promise<void> {
     const token = localStorage.getItem('auth_token');
     if (token) {
-      await makeRequest<void>('POST', '/auth/logout', {}, token);
+      await fetchByAuth<void>('POST', '/auth/logout', token, {});
     }
   },
 
   async getCurrentUser(token: string): Promise<User> {
-    return makeRequest<User>('GET', '/auth/me', undefined, token);
+    return fetchByAuth<User>('GET', '/auth/me', token);
   },
 
   async signInWithGoogle(): Promise<void> {
@@ -89,10 +36,10 @@ export const createAuthRepository = (): IAuthRepository => ({
   },
 
   async updateMe(input: UpdateProfileInput, token: string): Promise<User> {
-    return makeRequest<User>('PATCH', '/users/me', input, token);
+    return fetchByAuth<User>('PATCH', '/users/me', token, input);
   },
 
   async changePassword(input: ChangePasswordInput, token: string): Promise<void> {
-    await makeRequest<{ success: boolean }>('POST', '/auth/change-password', input, token);
+    await fetchByAuth<{ success: boolean }>('POST', '/auth/change-password', token, input);
   },
 });

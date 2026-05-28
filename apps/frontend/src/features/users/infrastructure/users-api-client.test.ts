@@ -83,7 +83,7 @@ describe('UsersRepository (api-client)', () => {
       json: async () => {
         throw new Error('invalid json');
       },
-    } as Response);
+    } as unknown as Response);
     const repo = createUserRepository();
     await expect(repo.listUsers()).rejects.toThrow(/respuesta inválida/i);
   });

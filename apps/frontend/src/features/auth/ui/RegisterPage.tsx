@@ -267,7 +267,7 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
       <Card>
         <Title>Crear cuenta</Title>
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={(e) => void handleSubmit(e)}>
           <Row>
             <FormGroup>
               <Label htmlFor="firstName">Nombre</Label>
@@ -338,7 +338,7 @@ const RegisterPage: React.FC<RegisterPageProps> = () => {
           </Button>
         </Form>
         <Divider>O</Divider>
-        <GoogleButton type="button" onClick={handleGoogleLogin} disabled={isLoading}>
+        <GoogleButton type="button" onClick={() => void handleGoogleLogin()} disabled={isLoading}>
           <GoogleIcon />
           Continuar con Google
         </GoogleButton>

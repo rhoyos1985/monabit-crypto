@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from 'styled-components';
@@ -37,10 +37,15 @@ export const buildTestQueryClient = () =>
     },
   });
 
+type RenderWithProvidersResult = RenderResult & {
+  store: ReturnType<typeof buildTestStore>;
+  queryClient: ReturnType<typeof buildTestQueryClient>;
+};
+
 export const renderWithProviders = (
   ui: ReactElement,
   { preloadedSession, route = '/', ...options }: RenderWithProvidersOptions = {}
-) => {
+): RenderWithProvidersResult => {
   const store = buildTestStore(preloadedSession);
   const queryClient = buildTestQueryClient();
 

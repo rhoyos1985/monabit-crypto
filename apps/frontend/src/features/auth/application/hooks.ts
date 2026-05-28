@@ -170,7 +170,7 @@ export const useCurrentUser = () => {
       }
     };
 
-    loadCurrentUser();
+    void loadCurrentUser();
   }, [token, user, dispatch]);
 
   return user;

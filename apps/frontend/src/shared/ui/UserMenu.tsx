@@ -294,7 +294,7 @@ const UserMenu: React.FC<UserMenuProps> = () => {
           <MenuItem type="button" onClick={handleSettings}>
             Configuración
           </MenuItem>
-          <MenuItemDestructive type="button" onClick={handleLogout}>
+          <MenuItemDestructive type="button" onClick={() => void handleLogout()}>
             Cerrar sesión
           </MenuItemDestructive>
         </Menu>

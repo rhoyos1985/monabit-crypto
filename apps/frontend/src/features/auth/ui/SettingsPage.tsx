@@ -305,7 +305,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         <Card>
           <PageTitle>Configuración del perfil</PageTitle>
           <Subtitle>Actualiza tu información personal. El email no se puede cambiar.</Subtitle>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={(e) => void handleSubmit(e)}>
             <FormGroup>
               <Label htmlFor="email">
                 Email <ReadOnlyHint>(no editable)</ReadOnlyHint>
@@ -366,7 +366,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
             <Subtitle>
               Ingresa tu contraseña actual y luego la nueva. Mínimo 8 caracteres.
             </Subtitle>
-            <Form onSubmit={handleChangePassword}>
+            <Form onSubmit={(e) => void handleChangePassword(e)}>
               {/* Campo username oculto para accesibilidad y password managers */}
               <input
                 type="email"

@@ -61,7 +61,7 @@ describe('PreferencesRepository (api-client)', () => {
       json: async () => {
         throw new Error('invalid');
       },
-    } as Response);
+    } as unknown as Response);
     const repo = createPreferencesRepository();
     await expect(repo.getMyPreferences('jwt')).rejects.toThrow(/respuesta inválida/i);
   });
