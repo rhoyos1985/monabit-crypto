@@ -29,8 +29,18 @@ export const cryptoMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  const body = req.body as EnvelopeBody | undefined;
+  const hasEncryptedBody = Boolean(body && body.message);
+  const headerValue = req.headers[CLIENT_KEY_HEADER];
+  const hasClientKeyHeader = typeof headerValue === 'string' && headerValue.length > 0;
+
+  if (!hasEncryptedBody && !hasClientKeyHeader) {
+    next();
+    return;
+  }
+
   const { privateKey } = await getCryptoKeys();
-  const clientPublicKey = await importClientKey(req.headers[CLIENT_KEY_HEADER]);
+  const clientPublicKey = await importClientKey(headerValue);
 
   if (clientPublicKey) {
     const originalJson = res.json.bind(res);
@@ -48,8 +58,7 @@ export const cryptoMiddleware = async (
     }) as Response['json'];
   }
 
-  const body = req.body as EnvelopeBody | undefined;
-  if (body && body.message) {
+  if (hasEncryptedBody && body?.message) {
     try {
       req.body = await decryptEnvelope(body.message, privateKey);
     } catch {
