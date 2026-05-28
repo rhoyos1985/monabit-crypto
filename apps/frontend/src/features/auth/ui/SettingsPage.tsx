@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import styled from 'styled-components';
-import { useAuth, useUpdateProfile, useChangePassword } from '../application/hooks.js';
+import { useAuth, useUpdateProfile, useChangePassword, useLogin } from '../application/hooks.js';
 import CitySelect from '../../locations/ui/CitySelect.js';
 import UserMenu from '../../../shared/ui/UserMenu.js';
 import { useToast } from '../../../shared/ui/Toast/ToastProvider.js';
@@ -201,6 +201,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
   const { user } = useAuth();
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
+  const login = useLogin();
   const { showSuccess, showError } = useToast();
 
   const [firstName, setFirstName] = useState<string>('');
@@ -276,6 +277,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
     setIsChangingPassword(true);
     try {
       await changePassword({ currentPassword, newPassword });
+      await login({ email: user.email, password: newPassword });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
