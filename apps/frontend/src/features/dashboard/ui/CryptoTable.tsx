@@ -1,7 +1,29 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import type { CryptoData } from '../domain/types.js';
 import { usePreferences, useToggleFavorite } from '../../preferences/application/hooks.js';
+import { formatPrice, formatLargeNumber } from '../../../shared/format.js';
+
+const Wrapper = styled.div`
+  width: 100%;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid ${(props) => props.theme.surface.border};
+  border-radius: 6px;
+  background: ${(props) => props.theme.surface.surface};
+  color: ${(props) => props.theme.surface.textPrimary};
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.brandPrimary};
+  }
+`;
 
 const TableWrapper = styled.div`
   width: 100%;
@@ -28,6 +50,15 @@ const HeaderCell = styled.th`
   white-space: nowrap;
 `;
 
+const SortableHeader = styled(HeaderCell)`
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    color: ${(props) => props.theme.brandPrimary};
+  }
+`;
+
 const BodyCell = styled.td`
   padding: 12px;
   border-bottom: 1px solid ${(props) => props.theme.surface.border};
@@ -35,7 +66,9 @@ const BodyCell = styled.td`
   white-space: nowrap;
 `;
 
-const BodyRow = styled.tr`
+const BodyRow = styled.tr<{ $clickable: boolean }>`
+  cursor: ${(props) => (props.$clickable ? 'pointer' : 'default')};
+
   &:hover {
     background: ${(props) => props.theme.surface.background};
   }
@@ -61,6 +94,12 @@ const CryptoSymbol = styled.div`
 const PriceChange = styled.span<{ $isPositive: boolean }>`
   color: ${(props) => (props.$isPositive ? '#10B981' : '#EF4444')};
   font-weight: 600;
+`;
+
+const EmptyRow = styled.td`
+  padding: 24px 12px;
+  text-align: center;
+  color: ${(props) => props.theme.surface.textMuted};
 `;
 
 const FavoriteButton = styled.button<{ $active: boolean }>`
@@ -96,90 +135,164 @@ const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 );
 
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price);
-};
+type SortKey = 'rank' | 'name' | 'price' | 'change' | 'marketCap' | 'volume';
+type SortDir = 'asc' | 'desc';
 
-const formatLargeNumber = (num: number | null): string => {
-  if (num === null) return 'N/A';
-  if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-  if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-  return `$${num.toFixed(0)}`;
+const getSortValue = (crypto: CryptoData, key: SortKey): number | string => {
+  switch (key) {
+    case 'name':
+      return crypto.name.toLowerCase();
+    case 'price':
+      return crypto.currentPrice;
+    case 'change':
+      return crypto.changePercent24h ?? 0;
+    case 'marketCap':
+      return crypto.marketCap ?? 0;
+    case 'volume':
+      return crypto.totalVolume ?? 0;
+    case 'rank':
+    default:
+      return crypto.marketCapRank ?? Number.MAX_SAFE_INTEGER;
+  }
 };
 
 interface CryptoTableProps {
   cryptos: CryptoData[];
   showFavoriteToggle?: boolean;
+  searchable?: boolean;
+  onSelect?: (crypto: CryptoData) => void;
 }
 
-const CryptoTable: React.FC<CryptoTableProps> = ({ cryptos, showFavoriteToggle = true }) => {
+const CryptoTable: React.FC<CryptoTableProps> = ({
+  cryptos,
+  showFavoriteToggle = true,
+  searchable = false,
+  onSelect,
+}) => {
   const { data: preferences } = usePreferences();
   const { mutate: toggleFavorite, isPending } = useToggleFavorite();
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('rank');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const favorites = preferences?.favoriteCoins ?? [];
+  const columnCount = showFavoriteToggle ? 7 : 6;
+
+  const visibleCryptos = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const filtered = term
+      ? cryptos.filter(
+          (c) => c.name.toLowerCase().includes(term) || c.symbol.toLowerCase().includes(term)
+        )
+      : cryptos;
+
+    return [...filtered].sort((a, b) => {
+      const aValue = getSortValue(a, sortKey);
+      const bValue = getSortValue(b, sortKey);
+      let comparison = 0;
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        comparison = aValue.localeCompare(bValue);
+      } else {
+        comparison = (aValue as number) - (bValue as number);
+      }
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+  }, [cryptos, search, sortKey, sortDir]);
+
+  const handleSort = (key: SortKey): void => {
+    if (key === sortKey) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortIndicator = (key: SortKey): string => {
+    if (key !== sortKey) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  };
 
   return (
-    <TableWrapper>
-      <Table>
-        <thead>
-          <tr>
-            {showFavoriteToggle && <HeaderCell> </HeaderCell>}
-            <HeaderCell>#</HeaderCell>
-            <HeaderCell>Nombre</HeaderCell>
-            <HeaderCell>Precio</HeaderCell>
-            <HeaderCell>24h</HeaderCell>
-            <HeaderCell>Market Cap</HeaderCell>
-            <HeaderCell>Volumen</HeaderCell>
-          </tr>
-        </thead>
-        <tbody>
-          {cryptos.map((crypto, index) => {
-            const isFavorite = favorites.includes(crypto.id);
-            return (
-              <BodyRow key={crypto.id}>
-                {showFavoriteToggle && (
+    <Wrapper>
+      {searchable && (
+        <SearchInput
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre o símbolo..."
+          aria-label="Buscar criptomoneda"
+        />
+      )}
+      <TableWrapper>
+        <Table>
+          <thead>
+            <tr>
+              {showFavoriteToggle && <HeaderCell> </HeaderCell>}
+              <SortableHeader onClick={() => handleSort('rank')}>#{sortIndicator('rank')}</SortableHeader>
+              <SortableHeader onClick={() => handleSort('name')}>Nombre{sortIndicator('name')}</SortableHeader>
+              <SortableHeader onClick={() => handleSort('price')}>Precio{sortIndicator('price')}</SortableHeader>
+              <SortableHeader onClick={() => handleSort('change')}>24h{sortIndicator('change')}</SortableHeader>
+              <SortableHeader onClick={() => handleSort('marketCap')}>Market Cap{sortIndicator('marketCap')}</SortableHeader>
+              <SortableHeader onClick={() => handleSort('volume')}>Volumen{sortIndicator('volume')}</SortableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleCryptos.length === 0 && (
+              <tr>
+                <EmptyRow colSpan={columnCount}>No se encontraron criptomonedas.</EmptyRow>
+              </tr>
+            )}
+            {visibleCryptos.map((crypto, index) => {
+              const isFavorite = favorites.includes(crypto.id);
+              return (
+                <BodyRow
+                  key={crypto.id}
+                  $clickable={Boolean(onSelect)}
+                  onClick={onSelect ? () => onSelect(crypto) : undefined}
+                >
+                  {showFavoriteToggle && (
+                    <BodyCell>
+                      <FavoriteButton
+                        type="button"
+                        $active={isFavorite}
+                        disabled={isPending}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(crypto.id);
+                        }}
+                        aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                        title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                      >
+                        <StarIcon filled={isFavorite} />
+                      </FavoriteButton>
+                    </BodyCell>
+                  )}
+                  <BodyCell>{crypto.marketCapRank || index + 1}</BodyCell>
                   <BodyCell>
-                    <FavoriteButton
-                      type="button"
-                      $active={isFavorite}
-                      disabled={isPending}
-                      onClick={() => toggleFavorite(crypto.id)}
-                      aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                      title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                    >
-                      <StarIcon filled={isFavorite} />
-                    </FavoriteButton>
+                    <CryptoInfo>
+                      <CryptoImage src={crypto.image} alt={crypto.name} />
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{crypto.name}</div>
+                        <CryptoSymbol>{crypto.symbol.toUpperCase()}</CryptoSymbol>
+                      </div>
+                    </CryptoInfo>
                   </BodyCell>
-                )}
-                <BodyCell>{crypto.marketCapRank || index + 1}</BodyCell>
-                <BodyCell>
-                  <CryptoInfo>
-                    <CryptoImage src={crypto.image} alt={crypto.name} />
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{crypto.name}</div>
-                      <CryptoSymbol>{crypto.symbol.toUpperCase()}</CryptoSymbol>
-                    </div>
-                  </CryptoInfo>
-                </BodyCell>
-                <BodyCell>{formatPrice(crypto.currentPrice)}</BodyCell>
-                <BodyCell>
-                  <PriceChange $isPositive={(crypto.changePercent24h ?? 0) >= 0}>
-                    {crypto.changePercent24h !== null ? `${crypto.changePercent24h.toFixed(2)}%` : 'N/A'}
-                  </PriceChange>
-                </BodyCell>
-                <BodyCell>{formatLargeNumber(crypto.marketCap)}</BodyCell>
-                <BodyCell>{formatLargeNumber(crypto.totalVolume)}</BodyCell>
-              </BodyRow>
-            );
-          })}
-        </tbody>
-      </Table>
-    </TableWrapper>
+                  <BodyCell>{formatPrice(crypto.currentPrice)}</BodyCell>
+                  <BodyCell>
+                    <PriceChange $isPositive={(crypto.changePercent24h ?? 0) >= 0}>
+                      {crypto.changePercent24h !== null ? `${crypto.changePercent24h.toFixed(2)}%` : 'N/A'}
+                    </PriceChange>
+                  </BodyCell>
+                  <BodyCell>{formatLargeNumber(crypto.marketCap)}</BodyCell>
+                  <BodyCell>{formatLargeNumber(crypto.totalVolume)}</BodyCell>
+                </BodyRow>
+              );
+            })}
+          </tbody>
+        </Table>
+      </TableWrapper>
+    </Wrapper>
   );
 };
 
