@@ -2,14 +2,43 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']          # Todas las ramas (incluye main y features)
   pull_request:
-    branches: [main]
+    branches: [main]          # Solo PRs dirigidos a main
 
 jobs:
-  # Detecta que parte del monorepo cambio para evitar correr lo que no toca
+  # Lint rápido para ramas que NO son main (solo en pushes)
+  lint-quick:
+    name: Lint & Typecheck (quick)
+    if: github.event_name == 'push' && github.ref_name != 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Lint (backend)
+        working-directory: apps/backend
+        run: yarn lint
+      - name: Typecheck (backend)
+        working-directory: apps/backend
+        run: yarn typecheck
+      - name: Lint (frontend)
+        working-directory: apps/frontend
+        run: yarn lint
+      - name: Typecheck (frontend)
+        working-directory: apps/frontend
+        run: yarn typecheck
+
+  # Detección de cambios (solo en main o PR hacia main)
   changes:
     name: Detect changes
+    if: |
+      (github.event_name == 'push' && github.ref_name == 'main') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
@@ -38,32 +67,29 @@ jobs:
   backend-test:
     name: Backend - Tests + Coverage >= 95%
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: |
+      needs.changes.outputs.backend == 'true' &&
+      ((github.event_name == 'push' && github.ref_name == 'main') ||
+       (github.event_name == 'pull_request' && github.base_ref == 'main'))
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/backend
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
-
       - name: Install dependencies (root + workspaces)
         working-directory: .
         run: yarn install --frozen-lockfile
-
       - name: Lint
         run: yarn lint
-
       - name: Typecheck
         run: yarn typecheck
-
       - name: Run tests with coverage (fails if < 95%)
         run: yarn test:coverage
-
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
@@ -74,32 +100,29 @@ jobs:
   frontend-test:
     name: Frontend - Tests + Coverage >= 95%
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: |
+      needs.changes.outputs.frontend == 'true' &&
+      ((github.event_name == 'push' && github.ref_name == 'main') ||
+       (github.event_name == 'pull_request' && github.base_ref == 'main'))
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/frontend
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
-
       - name: Install dependencies (root + workspaces)
         working-directory: .
         run: yarn install --frozen-lockfile
-
       - name: Lint
         run: yarn lint
-
       - name: Typecheck
         run: yarn typecheck
-
       - name: Run tests with coverage (fails if < 95%)
         run: yarn test:coverage
-
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
