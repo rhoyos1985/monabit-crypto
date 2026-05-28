@@ -11,38 +11,7 @@ env:
   TF_VAR_environment: prod
 
 jobs:
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      infra: ${{ steps.filter.outputs.infra }}
-      migrations: ${{ steps.filter.outputs.migrations }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            backend:
-              - 'apps/backend/**'
-              - 'package.json'
-              - 'yarn.lock'
-            frontend:
-              - 'apps/frontend/**'
-              - 'package.json'
-              - 'yarn.lock'
-            infra:
-              - 'infrastructure/terraform/**'
-            migrations:
-              - 'supabase/migrations/**'
-              - 'supabase/config.toml'
-
-  # GATE de calidad: SIEMPRE corre en push a main / manual, sin depender de
-  # paths-filter (que en el primer push o ciertos merges no detecta bien el diff).
+  # GATE de calidad: SIEMPRE corre en push a main / manual.
   # Threshold 95% lo enforza Jest/Vitest. Si falla, no se despliega nada.
   backend-test:
     name: Backend - Tests + Coverage >= 95% (GATE)
@@ -89,12 +58,9 @@ jobs:
         run: yarn test:coverage
 
   # Aplica migraciones a Supabase Cloud antes de que el backend nuevo arranque.
-  # Se ejecuta si cambiaron migraciones O si se va a desplegar backend (defensa por si
-  # el backend nuevo asume un schema que no estaba aplicado todavia).
+  # supabase db push es idempotente: solo aplica las migraciones pendientes.
   migrations-apply:
     name: Supabase - Apply migrations
-    needs: changes
-    if: needs.changes.outputs.migrations == 'true' || needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -117,11 +83,10 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
-  # Build + push de imagen backend SOLO si los tests pasaron y hubo cambios en backend
+  # Build + push de imagen backend, solo si los tests pasaron.
   backend-build:
     name: Backend - Build & Push image
-    needs: [changes, backend-test]
-    if: needs.changes.outputs.backend == 'true'
+    needs: backend-test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -161,8 +126,7 @@ jobs:
 
   frontend-build:
     name: Frontend - Build & Push image
-    needs: [changes, frontend-test]
-    if: needs.changes.outputs.frontend == 'true'
+    needs: frontend-test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -203,13 +167,12 @@ jobs:
           docker push ${{ steps.image.outputs.uri }}
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:latest
 
-  # Deploy backend a Cloud Run (independiente)
+  # Deploy backend a Cloud Run
   backend-deploy:
     name: Backend - Deploy to Cloud Run
     # Espera tanto al build como a las migraciones. Si las migraciones fallan,
     # el backend nuevo no se despliega (la imagen previa sigue activa).
-    needs: [changes, backend-build, migrations-apply]
-    if: needs.changes.outputs.backend == 'true'
+    needs: [backend-build, migrations-apply]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -233,8 +196,7 @@ jobs:
 
   frontend-deploy:
     name: Frontend - Deploy to Cloud Run
-    needs: [changes, frontend-build]
-    if: needs.changes.outputs.frontend == 'true'
+    needs: frontend-build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -256,11 +218,10 @@ jobs:
           region: ${{ env.GCP_REGION }}
           image: ${{ needs.frontend-build.outputs.image_uri }}
 
-  # Terraform aplica cambios de infraestructura solo si infraestructura cambió
+  # Terraform aplica la infraestructura. terraform apply es idempotente:
+  # si no hay cambios en el plan, no modifica nada.
   terraform-apply:
     name: Terraform - Apply infrastructure changes
-    needs: changes
-    if: needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
