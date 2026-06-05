@@ -105,11 +105,6 @@ resource "google_cloud_run_v2_service" "backend" {
         }
       }
 
-      env {
-        name  = "CRYPTO_PUBLIC_KEY"
-        value = var.crypto_public_key
-      }
-
       startup_probe {
         http_get {
           path = "/health"

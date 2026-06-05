@@ -15,7 +15,6 @@ import { swaggerSpec } from './shared/swagger.js';
 import logger from './shared/logger.js';
 import { runMigrations } from './shared/migrations.js';
 import seedAdmin from './shared/seed-admin.js';
-import { getCryptoKeys } from './shared/crypto-keys.js';
 import { cryptoMiddleware } from './shared/crypto-middleware.js';
 
 dotenv.config();
@@ -69,12 +68,6 @@ app.get('/docs.json', (_req, res) => {
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/crypto/public-key', (_req, res, next) => {
-  void getCryptoKeys()
-    .then(({ publicKeyPem }) => res.json({ publicKey: publicKeyPem }))
-    .catch(next);
 });
 
 app.use('/auth', authLimiter, cryptoMiddleware as RequestHandler, createAuthRouter(supabase));
