@@ -9,10 +9,11 @@ export interface IAuthRepository {
   register(input: RegisterInput): Promise<AuthResult>;
   login(input: LoginInput): Promise<AuthResult>;
   logout(): Promise<void>;
-  getCurrentUser(token: string): Promise<User>;
+  getCurrentUser(): Promise<User>;
   signInWithGoogle(): Promise<void>;
-  updateMe(input: UpdateProfileInput, token: string): Promise<User>;
-  changePassword(input: ChangePasswordInput, token: string): Promise<void>;
+  createSession(accessToken: string): Promise<User>;
+  updateMe(input: UpdateProfileInput): Promise<User>;
+  changePassword(input: ChangePasswordInput): Promise<void>;
 }
 
 export interface IAuthProvider {

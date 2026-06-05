@@ -54,10 +54,11 @@ const AuthCallback: React.FC<AuthCallbackProps> = () => {
           throw new Error('No se pudo obtener la sesión de Google');
         }
 
-        const token = data.session.access_token;
-        const user = await authRepository.getCurrentUser(token);
+        // El access_token de Supabase vive en el cliente tras el OAuth; se canjea
+        // por la cookie httpOnly del backend y se descarta del lado del navegador.
+        const user = await authRepository.createSession(data.session.access_token);
 
-        dispatch(setSession({ user, token }));
+        dispatch(setSession({ user }));
         void navigate({ to: '/dashboard' });
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Error al procesar autenticación';

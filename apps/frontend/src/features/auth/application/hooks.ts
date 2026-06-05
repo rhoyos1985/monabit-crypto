@@ -1,189 +1,142 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../../app/store.js';
-import { setLoading, setError, setSession, clearSession, setUser } from '../../../app/slices/session.js';
+import { setSession, clearSession, setUser } from '../../../app/slices/session.js';
 import { createAuthRepository } from '../infrastructure/api-client.js';
 import type { LoginInput, RegisterInput, UpdateProfileInput } from '../domain/types.js';
 import type { ChangePasswordInput } from '../ports/index.js';
 
 const authRepository = createAuthRepository();
 
+// Clave del cache de react-query para la sesion actual (GET /auth/me).
+export const AUTH_ME_KEY = ['auth', 'me'] as const;
+
+// Patron hibrido: react-query gestiona el ciclo de las llamadas al servidor
+// (mutations y query de /auth/me), y el resultado se materializa en el slice de
+// sesion de Redux, que es lo que lee la UI (useAuth). El cache de react-query se
+// mantiene sincronizado para reusar la sesion y deduplicar peticiones.
+
 export const useLogin = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
 
-  return useCallback(
-    async (input: LoginInput) => {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      try {
-        const result = await authRepository.login(input);
-        dispatch(
-          setSession({
-            user: result.user,
-            token: result.token.access_token,
-          })
-        );
-        return result;
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Login failed';
-        dispatch(setError(errorMsg));
-        throw error;
-      } finally {
-        dispatch(setLoading(false));
-      }
+  const mutation = useMutation({
+    mutationFn: (input: LoginInput) => authRepository.login(input),
+    onSuccess: (result) => {
+      queryClient.setQueryData(AUTH_ME_KEY, result.user);
+      dispatch(setSession({ user: result.user }));
     },
-    [dispatch]
-  );
+  });
+
+  return mutation.mutateAsync;
 };
 
 export const useRegister = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
 
-  return useCallback(
-    async (input: RegisterInput) => {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      try {
-        const result = await authRepository.register(input);
-        dispatch(
-          setSession({
-            user: result.user,
-            token: result.token.access_token,
-          })
-        );
-        return result;
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Registration failed';
-        dispatch(setError(errorMsg));
-        throw error;
-      } finally {
-        dispatch(setLoading(false));
-      }
+  const mutation = useMutation({
+    mutationFn: (input: RegisterInput) => authRepository.register(input),
+    onSuccess: (result) => {
+      queryClient.setQueryData(AUTH_ME_KEY, result.user);
+      dispatch(setSession({ user: result.user }));
     },
-    [dispatch]
-  );
+  });
+
+  return mutation.mutateAsync;
 };
 
 export const useLogout = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
 
-  return useCallback(async () => {
-    dispatch(setLoading(true));
+  const mutation = useMutation({
+    mutationFn: () => authRepository.logout(),
+    // La sesion se limpia siempre, aunque el endpoint falle, para no dejar al
+    // usuario en un estado autenticado inconsistente en el cliente.
+    onSettled: () => {
+      queryClient.setQueryData(AUTH_ME_KEY, null);
+      dispatch(clearSession());
+    },
+  });
+
+  // El logout nunca propaga error al consumidor: la sesion local ya quedo
+  // limpia en onSettled, asi que cerrar sesion siempre "tiene exito" en el cliente.
+  const logout = async (): Promise<void> => {
     try {
-      await authRepository.logout();
-      dispatch(clearSession());
-    } catch (error) {
-      console.error('Logout error:', error);
-      dispatch(clearSession());
-    } finally {
-      dispatch(setLoading(false));
+      await mutation.mutateAsync();
+    } catch {
+      // Ignorado a proposito: la sesion ya se limpio.
     }
-  }, [dispatch]);
+  };
+
+  return logout;
 };
 
 export const useUpdateProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const token = useSelector((state: RootState) => state.session.token);
+  const queryClient = useQueryClient();
 
-  return useCallback(
-    async (input: UpdateProfileInput) => {
-      if (!token) {
-        throw new Error('No hay sesión activa');
-      }
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      try {
-        const updatedUser = await authRepository.updateMe(input, token);
-        dispatch(setUser(updatedUser));
-        return updatedUser;
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'No se pudo actualizar el perfil';
-        dispatch(setError(errorMsg));
-        throw error;
-      } finally {
-        dispatch(setLoading(false));
-      }
+  const mutation = useMutation({
+    mutationFn: (input: UpdateProfileInput) => authRepository.updateMe(input),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(AUTH_ME_KEY, updatedUser);
+      dispatch(setUser(updatedUser));
     },
-    [dispatch, token]
-  );
+  });
+
+  return mutation.mutateAsync;
 };
 
 export const useChangePassword = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const token = useSelector((state: RootState) => state.session.token);
+  const mutation = useMutation({
+    mutationFn: (input: ChangePasswordInput) => authRepository.changePassword(input),
+  });
 
-  return useCallback(
-    async (input: ChangePasswordInput) => {
-      if (!token) {
-        throw new Error('No hay sesión activa');
-      }
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      try {
-        await authRepository.changePassword(input, token);
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'No se pudo cambiar la contraseña';
-        dispatch(setError(errorMsg));
-        throw error;
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-    [dispatch, token]
-  );
+  return mutation.mutateAsync;
 };
 
 export const useGoogleLogin = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const mutation = useMutation({
+    mutationFn: () => authRepository.signInWithGoogle(),
+  });
 
-  return useCallback(async () => {
-    dispatch(setLoading(true));
-    dispatch(setError(null));
-    try {
-      await authRepository.signInWithGoogle();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'No se pudo iniciar sesión con Google';
-      dispatch(setError(errorMsg));
-      dispatch(setLoading(false));
-      throw error;
-    }
-  }, [dispatch]);
+  return mutation.mutateAsync;
 };
 
-export const useCurrentUser = () => {
+// Rehidrata la sesion al cargar la app: react-query consulta GET /auth/me (el JS
+// no puede leer la cookie httpOnly) y el resultado se vuelca al slice de sesion.
+// Se deshabilita una vez rehidratada para no repetir la consulta.
+export const useSessionBootstrap = (): void => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, token } = useSelector((state: RootState) => state.session);
+  const bootstrapped = useSelector((state: RootState) => state.session.bootstrapped);
+
+  const { data, isSuccess, isError } = useQuery({
+    queryKey: AUTH_ME_KEY,
+    queryFn: () => authRepository.getCurrentUser(),
+    enabled: !bootstrapped,
+    retry: false,
+    staleTime: 5 * 60_000,
+  });
 
   useEffect(() => {
-    const loadCurrentUser = async () => {
-      if (token && !user) {
-        try {
-          dispatch(setLoading(true));
-          const currentUser = await authRepository.getCurrentUser(token);
-          dispatch(setUser(currentUser));
-        } catch (error) {
-          console.error('Failed to load current user:', error);
-          dispatch(clearSession());
-        } finally {
-          dispatch(setLoading(false));
-        }
-      }
-    };
-
-    void loadCurrentUser();
-  }, [token, user, dispatch]);
-
-  return user;
+    if (isSuccess && data) {
+      dispatch(setSession({ user: data }));
+    } else if (isError) {
+      dispatch(clearSession());
+    }
+  }, [isSuccess, isError, data, dispatch]);
 };
 
 export const useAuth = () => {
-  const { user, token, isLoading, error } = useSelector((state: RootState) => state.session);
+  const { user, isLoading, error, bootstrapped } = useSelector((state: RootState) => state.session);
 
   return {
     user,
-    token,
     isLoading,
     error,
-    isAuthenticated: !!token && !!user,
+    bootstrapped,
+    isAuthenticated: !!user,
   };
 };

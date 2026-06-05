@@ -1,26 +1,23 @@
 import type { AuthResult, LoginInput, RegisterInput, UpdateProfileInput, User } from '../domain/types.js';
 import type { IAuthRepository, ChangePasswordInput } from '../ports/index.js';
-import { fetchByAuth, fetchNoAuth } from '../../../shared/http-client.js';
+import { apiFetch } from '../../../shared/http-client.js';
 import { supabase } from '../../../shared/supabase.js';
 
 export const createAuthRepository = (): IAuthRepository => ({
   async register(input: RegisterInput): Promise<AuthResult> {
-    return fetchNoAuth<AuthResult>('POST', '/auth/register', input);
+    return apiFetch<AuthResult>('POST', '/auth/register', input);
   },
 
   async login(input: LoginInput): Promise<AuthResult> {
-    return fetchNoAuth<AuthResult>('POST', '/auth/login', input);
+    return apiFetch<AuthResult>('POST', '/auth/login', input);
   },
 
   async logout(): Promise<void> {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      await fetchByAuth<void>('POST', '/auth/logout', token, {});
-    }
+    await apiFetch<void>('POST', '/auth/logout', {});
   },
 
-  async getCurrentUser(token: string): Promise<User> {
-    return fetchByAuth<User>('GET', '/auth/me', token);
+  async getCurrentUser(): Promise<User> {
+    return apiFetch<User>('GET', '/auth/me');
   },
 
   async signInWithGoogle(): Promise<void> {
@@ -35,11 +32,17 @@ export const createAuthRepository = (): IAuthRepository => ({
     }
   },
 
-  async updateMe(input: UpdateProfileInput, token: string): Promise<User> {
-    return fetchByAuth<User>('PATCH', '/users/me', token, input);
+  // Intercambia el access_token de Supabase (obtenido en el cliente tras el
+  // OAuth de Google) por la cookie httpOnly del backend.
+  async createSession(accessToken: string): Promise<User> {
+    return apiFetch<User>('POST', '/auth/session', { accessToken });
   },
 
-  async changePassword(input: ChangePasswordInput, token: string): Promise<void> {
-    await fetchByAuth<{ success: boolean }>('POST', '/auth/change-password', token, input);
+  async updateMe(input: UpdateProfileInput): Promise<User> {
+    return apiFetch<User>('PATCH', '/users/me', input);
+  },
+
+  async changePassword(input: ChangePasswordInput): Promise<void> {
+    await apiFetch<{ success: boolean }>('POST', '/auth/change-password', input);
   },
 });

@@ -18,9 +18,9 @@ export const buildTestStore = (preloadedSession?: Partial<SessionState>) =>
       ? {
           session: {
             user: null,
-            token: null,
             isLoading: false,
             error: null,
+            bootstrapped: false,
             ...preloadedSession,
           },
         }

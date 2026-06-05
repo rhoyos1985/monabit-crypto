@@ -7,9 +7,9 @@ interface AdminRouteProps {
 }
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, bootstrapped } = useAuth();
 
-  if (isLoading) {
+  if (!bootstrapped || isLoading) {
     return <div style={{ padding: '24px', textAlign: 'center' }}>Cargando...</div>;
   }
 

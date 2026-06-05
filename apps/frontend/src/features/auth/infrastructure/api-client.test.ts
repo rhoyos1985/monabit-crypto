@@ -91,24 +91,37 @@ describe('AuthRepository (api-client)', () => {
     );
   });
 
-  it('logout llama al endpoint sólo si hay token en localStorage', async () => {
+  it('logout hace POST a /auth/logout (la cookie httpOnly se limpia en el backend)', async () => {
+    fetchSpy.mockResolvedValueOnce(apiResponse(null));
     const repo = createAuthRepository();
     await repo.logout();
-    expect(fetchSpy).not.toHaveBeenCalled();
-
-    localStorage.setItem('auth_token', 'token-abc');
-    fetchSpy.mockResolvedValueOnce(apiResponse(null));
-    await repo.logout();
     expect(fetchSpy).toHaveBeenCalled();
+    const [, init] = fetchSpy.mock.calls[0]!;
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).credentials).toBe('include');
   });
 
-  it('getCurrentUser hace GET a /auth/me con token', async () => {
+  it('getCurrentUser hace GET a /auth/me usando la cookie (credentials: include)', async () => {
     fetchSpy.mockResolvedValueOnce(
       apiResponse({ id: 'u-1', email: 'a@b.com', authProvider: 'email', role: 'user', isActive: true, createdAt: '', updatedAt: '' })
     );
     const repo = createAuthRepository();
-    const user = await repo.getCurrentUser('jwt-token');
+    const user = await repo.getCurrentUser();
     expect(user.email).toBe('a@b.com');
+    const [, init] = fetchSpy.mock.calls[0]!;
+    expect((init as RequestInit).credentials).toBe('include');
+  });
+
+  it('createSession intercambia el token de Supabase por la cookie httpOnly', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      apiResponse({ id: 'u-1', email: 'a@b.com', authProvider: 'google', role: 'user', isActive: true, createdAt: '', updatedAt: '' })
+    );
+    const repo = createAuthRepository();
+    const user = await repo.createSession('supabase-token');
+    expect(user.email).toBe('a@b.com');
+    const [url, init] = fetchSpy.mock.calls[0]!;
+    expect(String(url)).toContain('/auth/session');
+    expect((init as RequestInit).method).toBe('POST');
   });
 
   it('signInWithGoogle delega en supabase.auth.signInWithOAuth', async () => {
@@ -141,14 +154,14 @@ describe('AuthRepository (api-client)', () => {
       apiResponse({ id: 'u-1', email: 'a@b.com', firstName: 'Nuevo', authProvider: 'email', role: 'user', isActive: true, createdAt: '', updatedAt: '' })
     );
     const repo = createAuthRepository();
-    const user = await repo.updateMe({ firstName: 'Nuevo' }, 'jwt');
+    const user = await repo.updateMe({ firstName: 'Nuevo' });
     expect(user.firstName).toBe('Nuevo');
   });
 
   it('changePassword hace POST a /auth/change-password', async () => {
     fetchSpy.mockResolvedValueOnce(apiResponse({ success: true }));
     const repo = createAuthRepository();
-    await repo.changePassword({ currentPassword: 'old', newPassword: 'new12345' }, 'jwt');
+    await repo.changePassword({ currentPassword: 'old', newPassword: 'new12345' });
     expect(fetchSpy).toHaveBeenCalled();
   });
 });

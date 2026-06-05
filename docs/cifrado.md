@@ -89,3 +89,47 @@ activado; de lo contrario el handshake fallará (el backend no podría descifrar
 Solo se cifran `/auth/*` y `/users/*`. Los datos de mercado (`/market`) y demás
 endpoints públicos viajan en claro (siguen protegidos por HTTPS). Esta capa es
 defensa en profundidad: no reemplaza TLS, lo complementa.
+
+---
+
+# Sesión en cookie httpOnly
+
+El access_token de Supabase no se guarda en `localStorage` ni se expone al
+JavaScript del navegador: vive en una cookie **httpOnly**, inaccesible desde JS.
+Esto neutraliza el robo de token por XSS, ya que ningún script puede leer la
+credencial.
+
+## Flujo
+
+```
+1. Login/registro (email/password): el backend valida, y en la respuesta
+   incluye Set-Cookie: access_token=<jwt>; HttpOnly; Secure; SameSite=Lax.
+2. Google OAuth: la sesión la materializa Supabase en el cliente; el frontend
+   envía ese token a POST /auth/session, que lo valida y setea la misma cookie.
+3. Cada petición autenticada viaja con `credentials: 'include'`; el navegador
+   adjunta la cookie automáticamente. El backend la lee en el middleware de auth
+   (con fallback al header Authorization para clientes no-navegador).
+4. Al cargar la app, el frontend llama a GET /auth/me para rehidratar la sesión
+   desde la cookie (el JS no puede leerla directamente).
+5. Logout: el backend limpia la cookie (Set-Cookie con expiración en el pasado).
+```
+
+## Reverse proxy (mismo origen)
+
+La cookie usa `SameSite=Lax`, lo que exige que frontend y backend compartan
+origen. Como en Cloud Run viven en subdominios `*.run.app` distintos (cookies de
+terceros, bloqueadas por los navegadores), el frontend hace de **reverse proxy**:
+el SPA llama a `/api/*` (su propio origen) y el proxy lo reenvía al backend.
+
+- Desarrollo: el dev server de Vite proxya `/api` → `VITE_PROXY_TARGET`.
+- Producción: nginx proxya `/api` → `${BACKEND_URL}` (inyectado por Terraform).
+
+Así la cookie nunca es de terceros y `SameSite=Lax` mitiga CSRF. La cookie es
+`Secure` solo en producción (`NODE_ENV=production`), para permitir HTTP en local.
+
+## Relación con el cifrado
+
+Ambas capas son independientes y complementarias: el cifrado JWE protege el
+**cuerpo** de las peticiones `/auth` y `/users`; la cookie httpOnly protege la
+**credencial de sesión**. La cookie viaja como header `Set-Cookie` (no como
+cuerpo), protegida por TLS, sin pasar por el sobre JWE.

@@ -21,24 +21,24 @@ describe('PreferencesRepository (api-client)', () => {
 
   const prefs = { userId: 'u-1', theme: 'light', favoriteCoins: [], updatedAt: '' };
 
-  it('getMyPreferences hace GET /preferences/me con token', async () => {
+  it('getMyPreferences hace GET /preferences/me via cookie', async () => {
     fetchSpy.mockResolvedValueOnce(ok(prefs));
     const repo = createPreferencesRepository();
-    const result = await repo.getMyPreferences('jwt');
+    const result = await repo.getMyPreferences();
     expect(result.userId).toBe('u-1');
   });
 
   it('updateMyPreferences hace PATCH con body JSON', async () => {
     fetchSpy.mockResolvedValueOnce(ok({ ...prefs, theme: 'dark' }));
     const repo = createPreferencesRepository();
-    const result = await repo.updateMyPreferences({ theme: 'dark' }, 'jwt');
+    const result = await repo.updateMyPreferences({ theme: 'dark' });
     expect(result.theme).toBe('dark');
   });
 
   it('toggleFavorite hace POST a /preferences/me/favorites con coinId', async () => {
     fetchSpy.mockResolvedValueOnce(ok({ ...prefs, favoriteCoins: ['bitcoin'] }));
     const repo = createPreferencesRepository();
-    const result = await repo.toggleFavorite('bitcoin', 'jwt');
+    const result = await repo.toggleFavorite('bitcoin');
     expect(result.favoriteCoins).toContain('bitcoin');
     const [, init] = fetchSpy.mock.calls[0]!;
     expect((init as RequestInit).body).toBe(JSON.stringify({ coinId: 'bitcoin' }));
@@ -51,7 +51,7 @@ describe('PreferencesRepository (api-client)', () => {
       json: async () => ({ httpStatus: '401', apiMessage: 'Unauthorized', apiData: null }),
     } as Response);
     const repo = createPreferencesRepository();
-    await expect(repo.getMyPreferences('jwt')).rejects.toThrow('Unauthorized');
+    await expect(repo.getMyPreferences()).rejects.toThrow('Unauthorized');
   });
 
   it('lanza error cuando el JSON es inválido', async () => {
@@ -63,6 +63,6 @@ describe('PreferencesRepository (api-client)', () => {
       },
     } as unknown as Response);
     const repo = createPreferencesRepository();
-    await expect(repo.getMyPreferences('jwt')).rejects.toThrow(/respuesta inválida/i);
+    await expect(repo.getMyPreferences()).rejects.toThrow(/respuesta inválida/i);
   });
 });

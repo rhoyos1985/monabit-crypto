@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import express, { Express } from 'express';
+import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import 'express-async-errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -64,6 +65,7 @@ const buildSupabaseMock = (config: {
 const buildApp = (supabase: jest.Mocked<SupabaseClient>): Express => {
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
   app.use('/auth', createAuthRouter(supabase));
   app.use(errorHandler);
   return app;
@@ -143,15 +145,87 @@ describe('Auth router (integración)', () => {
       expect(res.status).toBe(200);
       expect(res.body.apiData.user.role).toBe('user');
     });
+
+    it('setea la cookie httpOnly access_token al iniciar sesión', async () => {
+      const supabase = buildSupabaseMock({
+        signInResult: {
+          data: { user: buildAuthUser(), session: buildSession() },
+          error: null,
+        },
+        getUserResult: { data: { user: buildAuthUser() }, error: null },
+        profileRow: buildProfileRow(),
+      });
+      const app = buildApp(supabase);
+
+      const res = await request(app).post('/auth/login').send({
+        email: 'user@example.com',
+        password: 'secret123',
+      });
+
+      const cookies = res.headers['set-cookie'] as unknown as string[];
+      const authCookie = cookies.find((c) => c.startsWith('access_token='));
+      expect(authCookie).toBeDefined();
+      expect(authCookie).toContain('access_token=token-abc');
+      expect(authCookie).toContain('HttpOnly');
+      expect(authCookie).toContain('SameSite=Lax');
+    });
+  });
+
+  describe('POST /auth/session', () => {
+    it('intercambia un token de Supabase por la cookie httpOnly (200)', async () => {
+      const supabase = buildSupabaseMock({
+        getUserResult: { data: { user: buildAuthUser() }, error: null },
+        profileRow: buildProfileRow(),
+      });
+      const app = buildApp(supabase);
+
+      const res = await request(app).post('/auth/session').send({ accessToken: 'supabase-token' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.apiData.email).toBe('user@example.com');
+      const cookies = res.headers['set-cookie'] as unknown as string[];
+      expect(cookies.some((c) => c.startsWith('access_token=') && c.includes('HttpOnly'))).toBe(true);
+    });
+
+    it('rechaza con 400 si falta accessToken', async () => {
+      const supabase = buildSupabaseMock({});
+      const app = buildApp(supabase);
+
+      const res = await request(app).post('/auth/session').send({});
+      expect(res.status).toBe(400);
+    });
+
+    it('devuelve 401 si el token de Supabase es inválido', async () => {
+      const supabase = buildSupabaseMock({
+        getUserResult: { data: { user: null }, error: { message: 'invalid' } },
+      });
+      const app = buildApp(supabase);
+
+      const res = await request(app).post('/auth/session').send({ accessToken: 'bad-token' });
+      expect(res.status).toBe(401);
+    });
   });
 
   describe('GET /auth/me', () => {
-    it('devuelve 401 sin Authorization header', async () => {
+    it('devuelve 401 sin cookie ni Authorization header', async () => {
       const supabase = buildSupabaseMock({});
       const app = buildApp(supabase);
 
       const res = await request(app).get('/auth/me');
       expect(res.status).toBe(401);
+    });
+
+    it('autentica usando la cookie httpOnly access_token', async () => {
+      const supabase = buildSupabaseMock({
+        getUserResult: { data: { user: buildAuthUser() }, error: null },
+        profileRow: buildProfileRow(),
+      });
+      const app = buildApp(supabase);
+
+      const res = await request(app).get('/auth/me').set('Cookie', 'access_token=valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.apiData.email).toBe('user@example.com');
     });
 
     it('devuelve 200 con un token válido', async () => {

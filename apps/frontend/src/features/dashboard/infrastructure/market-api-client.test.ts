@@ -17,42 +17,32 @@ describe('MarketRepository (api-client)', () => {
 
   afterEach(() => {
     fetchSpy.mockRestore();
-    localStorage.clear();
   });
 
-  it('lanza error cuando no hay token', async () => {
-    const repo = createMarketRepository();
-    await expect(repo.getMarketOverview()).rejects.toThrow(/sesión/i);
-  });
-
-  it('GET /market/overview con token devuelve overview', async () => {
-    localStorage.setItem('auth_token', 'jwt');
+  it('GET /market/overview envía la cookie de sesión (credentials: include)', async () => {
     fetchSpy.mockResolvedValueOnce(
       apiResponse({ topCryptos: [], marketKpis: {}, lastFetched: '2026-05-27' })
     );
     const repo = createMarketRepository();
     const result = await repo.getMarketOverview();
     expect(result).toBeDefined();
+    const [, init] = fetchSpy.mock.calls[0]!;
+    expect((init as RequestInit).credentials).toBe('include');
   });
 
   it('lanza error con apiMessage del backend cuando responde con error', async () => {
-    localStorage.setItem('auth_token', 'jwt');
-    fetchSpy.mockResolvedValueOnce(
-      apiResponse(null, false, 'CoinGecko no disponible')
-    );
+    fetchSpy.mockResolvedValueOnce(apiResponse(null, false, 'CoinGecko no disponible'));
     const repo = createMarketRepository();
     await expect(repo.getMarketOverview()).rejects.toThrow(/CoinGecko/);
   });
 
   it('lanza error de conexión cuando fetch falla', async () => {
-    localStorage.setItem('auth_token', 'jwt');
     fetchSpy.mockRejectedValueOnce(new Error('Net'));
     const repo = createMarketRepository();
     await expect(repo.getMarketOverview()).rejects.toThrow(/conexión/i);
   });
 
   it('lanza error cuando el JSON es inválido', async () => {
-    localStorage.setItem('auth_token', 'jwt');
     fetchSpy.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -64,8 +54,7 @@ describe('MarketRepository (api-client)', () => {
     await expect(repo.getMarketOverview()).rejects.toThrow(/respuesta inválida/i);
   });
 
-  it('GET /market/coins/:id/chart con token devuelve el chart', async () => {
-    localStorage.setItem('auth_token', 'jwt');
+  it('GET /market/coins/:id/chart devuelve el chart', async () => {
     fetchSpy.mockResolvedValueOnce(
       apiResponse({ id: 'bitcoin', range: 'day', points: [{ timestamp: 1, price: 50000 }] })
     );
@@ -77,10 +66,5 @@ describe('MarketRepository (api-client)', () => {
       expect.stringContaining('/market/coins/bitcoin/chart?range=day'),
       expect.anything()
     );
-  });
-
-  it('getCoinChart lanza error cuando no hay token', async () => {
-    const repo = createMarketRepository();
-    await expect(repo.getCoinChart('bitcoin', 'week')).rejects.toThrow(/sesión/i);
   });
 });

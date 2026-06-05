@@ -13,21 +13,19 @@ describe('UsersRepository (api-client)', () => {
 
   beforeEach(() => {
     fetchSpy = vi.spyOn(global, 'fetch');
-    localStorage.setItem('auth_token', 'jwt-token');
   });
 
   afterEach(() => {
     fetchSpy.mockRestore();
-    localStorage.clear();
   });
 
-  it('listUsers hace GET a /users con Authorization header', async () => {
+  it('listUsers hace GET a /users enviando la cookie de sesión (credentials: include)', async () => {
     fetchSpy.mockResolvedValueOnce(apiResponse([{ id: 'u-1' }]));
     const repo = createUserRepository();
     const users = await repo.listUsers();
     expect(users).toHaveLength(1);
     const [, init] = fetchSpy.mock.calls[0]!;
-    expect((init as RequestInit).headers).toMatchObject({ Authorization: 'Bearer jwt-token' });
+    expect((init as RequestInit).credentials).toBe('include');
   });
 
   it('createUser hace POST con body JSON', async () => {
@@ -52,12 +50,6 @@ describe('UsersRepository (api-client)', () => {
     await repo.deactivateUser('u-1');
     const [url] = fetchSpy.mock.calls[0]!;
     expect(String(url)).toContain('/users/u-1/deactivate');
-  });
-
-  it('lanza error cuando no hay token en localStorage', async () => {
-    localStorage.removeItem('auth_token');
-    const repo = createUserRepository();
-    await expect(repo.listUsers()).rejects.toThrow(/sesión/i);
   });
 
   it('lanza Error con apiMessage cuando el response no es ok', async () => {

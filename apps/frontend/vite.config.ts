@@ -15,8 +15,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // El SPA llama a /api (mismo origen) y Vite lo redirige al backend en dev,
+      // replicando lo que hace nginx en produccion. Esto habilita la cookie
+      // httpOnly SameSite=Lax sin convertirla en cookie de terceros.
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8080',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

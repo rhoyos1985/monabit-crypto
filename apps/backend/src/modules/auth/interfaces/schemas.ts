@@ -15,6 +15,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
+export const sessionSchema = z.object({
+  accessToken: z.string().min(1, 'El token es requerido'),
+});
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'La contraseña actual es requerida'),
@@ -56,4 +60,5 @@ export const authResultResponseSchema = z.object({
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>;
+export type SessionRequest = z.infer<typeof sessionSchema>;
 export type AuthResultResponse = z.infer<typeof authResultResponseSchema>;
