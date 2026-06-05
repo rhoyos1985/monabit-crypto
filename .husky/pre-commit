@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Validacion rapida antes de cada commit: tipos y lint en ambos workspaces.
+yarn typecheck
+yarn lint

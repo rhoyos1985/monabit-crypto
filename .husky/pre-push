@@ -1,0 +1,8 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Antes de pushear se ejecuta la misma bateria que el CI para no romper main:
+# tipos, lint y tests en ambos workspaces.
+yarn typecheck
+yarn lint
+yarn workspaces run test
