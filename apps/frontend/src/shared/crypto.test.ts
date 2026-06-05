@@ -10,9 +10,8 @@ describe('crypto envelope (frontend)', () => {
 
     const message = await encryptEnvelope(data, publicKey);
 
-    expect(typeof message.payload).toBe('string');
-    expect(typeof message.signed).toBe('string');
-    expect(JSON.stringify(message)).not.toContain('a@b.com');
+    expect(typeof message).toBe('string');
+    expect(message).not.toContain('a@b.com');
 
     const decrypted = await decryptEnvelope(message, privateKey);
     expect(decrypted).toEqual(data);

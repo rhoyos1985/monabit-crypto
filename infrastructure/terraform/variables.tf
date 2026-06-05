@@ -66,11 +66,6 @@ variable "crypto_private_key" {
   sensitive   = true
 }
 
-variable "crypto_public_key" {
-  description = "Llave publica RSA (SPKI PEM) para el cifrado de extremo a extremo (publica)"
-  type        = string
-}
-
 variable "github_repository" {
   description = "Repositorio de GitHub en formato 'owner/repo' para Workload Identity Federation"
   type        = string

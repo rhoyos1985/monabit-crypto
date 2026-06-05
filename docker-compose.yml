@@ -30,6 +30,7 @@ services:
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Change123!@#}
       LOG_LEVEL: debug
       NODE_ENV: development
+      CRYPTO_PRIVATE_KEY: ${CRYPTO_PRIVATE_KEY:-}
     ports:
       - "8080:8080"
     volumes:
@@ -56,6 +57,7 @@ services:
       VITE_API_BASE_URL: http://localhost:8080
       VITE_SUPABASE_URL: http://localhost:54321
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in .env}
+      VITE_CRYPTO_PUBLIC_KEY: ${CRYPTO_PUBLIC_KEY:-}
     ports:
       - "5173:5173"
     volumes:

@@ -22,7 +22,11 @@ const isSecurePath = (path: string): boolean =>
   SECURE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 
 const hasEncryptedMessage = (value: unknown): value is { message: EncryptedMessage } =>
-  typeof value === 'object' && value !== null && 'message' in value;
+  typeof value === 'object' &&
+  value !== null &&
+  'message' in value &&
+  typeof (value as { message: unknown }).message === 'string' &&
+  ((value as { message: string }).message).length > 0;
 
 const request = async <T>(
   method: HttpMethod,

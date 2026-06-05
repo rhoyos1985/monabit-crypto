@@ -16,9 +16,10 @@ supabase_anon_key         = "..."
 seed_admin_email    = "admin@example.com"
 seed_admin_password = "..."
 
-# Par de llaves RSA para el cifrado de extremo a extremo (auth y users).
-# Generar con:
+# Llave privada RSA para descifrar las peticiones (la publica vive como
+# secreto de GitHub Actions y se inyecta como --build-arg
+# VITE_CRYPTO_PUBLIC_KEY al construir la imagen del frontend).
+# Generar el par con:
 #   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
 #   openssl rsa -in private.pem -pubout -out public.pem
 crypto_private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
-crypto_public_key  = "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"

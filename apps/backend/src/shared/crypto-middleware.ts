@@ -12,6 +12,9 @@ interface EnvelopeBody {
   message?: EncryptedMessage;
 }
 
+const isEncryptedMessage = (value: unknown): value is EncryptedMessage =>
+  typeof value === 'string' && value.length > 0;
+
 const importClientKey = async (header: string | string[] | undefined): Promise<CryptoKey | null> => {
   if (typeof header !== 'string' || header.length === 0) {
     return null;
@@ -30,7 +33,7 @@ export const cryptoMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   const body = req.body as EnvelopeBody | undefined;
-  const hasEncryptedBody = Boolean(body && body.message);
+  const hasEncryptedBody = Boolean(body && isEncryptedMessage(body.message));
   const headerValue = req.headers[CLIENT_KEY_HEADER];
   const hasClientKeyHeader = typeof headerValue === 'string' && headerValue.length > 0;
 
@@ -58,7 +61,7 @@ export const cryptoMiddleware = async (
     }) as Response['json'];
   }
 
-  if (hasEncryptedBody && body?.message) {
+  if (hasEncryptedBody && body && isEncryptedMessage(body.message)) {
     try {
       req.body = await decryptEnvelope(body.message, privateKey);
     } catch {

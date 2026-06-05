@@ -159,6 +159,7 @@ jobs:
             --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
             --build-arg VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }} \
             --build-arg VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }} \
+            --build-arg VITE_CRYPTO_PUBLIC_KEY="${{ secrets.CRYPTO_PUBLIC_KEY }}" \
             -t ${{ steps.image.outputs.uri }} \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:latest \
             .
@@ -237,7 +238,6 @@ jobs:
       TF_VAR_seed_admin_email: ${{ secrets.SEED_ADMIN_EMAIL }}
       TF_VAR_seed_admin_password: ${{ secrets.SEED_ADMIN_PASSWORD }}
       TF_VAR_crypto_private_key: ${{ secrets.CRYPTO_PRIVATE_KEY }}
-      TF_VAR_crypto_public_key: ${{ secrets.CRYPTO_PUBLIC_KEY }}
       TF_VAR_backend_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/monabit-prod/backend:latest
       TF_VAR_frontend_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/monabit-prod/frontend:latest
     steps:
