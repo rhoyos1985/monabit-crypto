@@ -1,4 +1,7 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// Ruta relativa al mismo origen: en dev la sirve el proxy de Vite y en prod el
+// reverse proxy de nginx, ambos hacia el backend. Mismo origen => la cookie
+// httpOnly de sesion (SameSite=Lax) viaja sin problemas de terceros.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import sessionReducer, {
   setLoading,
   setError,
@@ -24,17 +24,12 @@ const buildUser = (overrides: Partial<SessionUser> = {}): SessionUser => ({
 
 const initialState: SessionState = {
   user: null,
-  token: null,
   isLoading: false,
   error: null,
+  bootstrapped: false,
 };
 
 describe('session slice', () => {
-  beforeEach(() => {
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {});
-    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {});
-  });
-
   it('setLoading actualiza isLoading', () => {
     const state = sessionReducer(initialState, setLoading(true));
     expect(state.isLoading).toBe(true);
@@ -45,45 +40,42 @@ describe('session slice', () => {
     expect(state.error).toBe('Algo falló');
   });
 
-  it('setSession persiste el token en localStorage y guarda usuario', () => {
+  it('setSession guarda el usuario y marca la sesión rehidratada', () => {
     const user = buildUser();
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
 
-    const state = sessionReducer(initialState, setSession({ user, token: 'jwt-token' }));
+    const state = sessionReducer(initialState, setSession({ user }));
 
     expect(state.user).toEqual(user);
-    expect(state.token).toBe('jwt-token');
-    expect(setItemSpy).toHaveBeenCalledWith('auth_token', 'jwt-token');
+    expect(state.bootstrapped).toBe(true);
+    expect(state.error).toBeNull();
   });
 
-  it('clearSession limpia user, token y remueve del localStorage', () => {
-    const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem');
+  it('clearSession limpia el usuario y marca rehidratado', () => {
     const populated: SessionState = {
       user: buildUser(),
-      token: 'jwt',
       isLoading: false,
       error: null,
+      bootstrapped: false,
     };
 
     const state = sessionReducer(populated, clearSession());
 
     expect(state.user).toBeNull();
-    expect(state.token).toBeNull();
-    expect(removeItemSpy).toHaveBeenCalledWith('auth_token');
+    expect(state.bootstrapped).toBe(true);
   });
 
-  it('setUser actualiza solo el campo user sin tocar token', () => {
+  it('setUser actualiza solo el campo user', () => {
     const populated: SessionState = {
       user: null,
-      token: 'jwt',
       isLoading: false,
       error: null,
+      bootstrapped: true,
     };
     const user = buildUser({ firstName: 'Nuevo' });
 
     const state = sessionReducer(populated, setUser(user));
 
     expect(state.user).toEqual(user);
-    expect(state.token).toBe('jwt');
+    expect(state.bootstrapped).toBe(true);
   });
 });

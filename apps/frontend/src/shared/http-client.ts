@@ -28,16 +28,8 @@ const hasEncryptedMessage = (value: unknown): value is { message: EncryptedMessa
   typeof (value as { message: unknown }).message === 'string' &&
   ((value as { message: string }).message).length > 0;
 
-const request = async <T>(
-  method: HttpMethod,
-  path: string,
-  body?: unknown,
-  token?: string
-): Promise<T> => {
+const request = async <T>(method: HttpMethod, path: string, body?: unknown): Promise<T> => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
 
   const secure = isSecurePath(path) && isEncryptionEnabled();
   let privateKey: CryptoKey | null = null;
@@ -52,7 +44,10 @@ const request = async <T>(
     }
   }
 
-  const options: RequestInit = { method, headers };
+  // `credentials: 'include'` envia la cookie httpOnly de sesion en cada peticion.
+  // La autenticacion ya no viaja en un header legible por JS, sino en la cookie
+  // que el navegador adjunta automaticamente.
+  const options: RequestInit = { method, headers, credentials: 'include' };
   if (outgoingBody !== undefined) {
     options.body = JSON.stringify(outgoingBody);
   }
@@ -83,20 +78,7 @@ const request = async <T>(
   return data.apiData as T;
 };
 
-export const fetchByAuth = <T>(
-  method: HttpMethod,
-  path: string,
-  token: string,
-  body?: unknown
-): Promise<T> => request<T>(method, path, body, token);
-
-export const fetchNoAuth = <T>(method: HttpMethod, path: string, body?: unknown): Promise<T> =>
+// Punto unico de acceso HTTP. La sesion se autentica via la cookie httpOnly
+// (credentials: 'include'); no se pasa ningun token desde el JS.
+export const apiFetch = <T>(method: HttpMethod, path: string, body?: unknown): Promise<T> =>
   request<T>(method, path, body);
-
-export const getStoredToken = (): string => {
-  const token = localStorage.getItem('auth_token');
-  if (!token) {
-    throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-  }
-  return token;
-};

@@ -30,6 +30,17 @@ variable "frontend_image" {
   type        = string
 }
 
+# Origen permitido por CORS en el backend. Detras del reverse proxy de nginx el
+# navegador es mismo-origen y CORS no se ejercita, por lo que es opcional; se
+# mantiene para accesos directos al backend. Se deja como variable (en vez de
+# referenciar la URL del frontend) para evitar una dependencia circular entre
+# los servicios de Cloud Run.
+variable "cors_origin" {
+  description = "Origen permitido por CORS en el backend (opcional con reverse proxy)"
+  type        = string
+  default     = ""
+}
+
 variable "supabase_url" {
   description = "URL del proyecto Supabase"
   type        = string

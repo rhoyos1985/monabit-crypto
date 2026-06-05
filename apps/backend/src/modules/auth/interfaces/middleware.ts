@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { User, UserRole } from '../domain/types.js';
 import { HTTPUnauthorized, HTTPForbidden } from '../../../shared/http-error.js';
+import { AUTH_COOKIE_NAME } from '../../../shared/auth-cookie.js';
 
 export interface AuthRequest extends Request {
   user?: User;
@@ -27,13 +28,18 @@ interface Profile {
 export const createRequireAuthMiddleware =
   (supabase: SupabaseClient) =>
   async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
+    // Fuente primaria: cookie httpOnly. Fallback al header Authorization para
+    // clientes no-navegador (tests, integraciones) que no usan cookies.
+    const cookies = req.cookies as Record<string, string | undefined> | undefined;
+    const cookieToken = cookies?.[AUTH_COOKIE_NAME];
     const authHeader = req.headers.authorization;
+    const headerToken =
+      authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    const token = cookieToken ?? headerToken;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new HTTPUnauthorized('Missing or invalid authorization header');
+    if (!token) {
+      throw new HTTPUnauthorized('Missing or invalid authorization');
     }
-
-    const token = authHeader.slice(7);
     const { data: authUser, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !authUser.user) {

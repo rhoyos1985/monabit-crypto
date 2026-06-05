@@ -54,7 +54,11 @@ services:
       backend:
         condition: service_healthy
     environment:
-      VITE_API_BASE_URL: http://localhost:8080
+      # El SPA llama a /api (mismo origen) y el dev server de Vite lo reenvia al
+      # backend (VITE_PROXY_TARGET), replicando el reverse proxy de nginx en prod.
+      # Mismo origen => la cookie httpOnly de sesion (SameSite=Lax) viaja bien.
+      VITE_API_BASE_URL: /api
+      VITE_PROXY_TARGET: http://backend:8080
       VITE_SUPABASE_URL: http://localhost:54321
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in .env}
       VITE_CRYPTO_PUBLIC_KEY: ${CRYPTO_PUBLIC_KEY:-}

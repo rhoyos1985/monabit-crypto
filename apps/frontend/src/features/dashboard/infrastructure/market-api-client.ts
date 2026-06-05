@@ -1,17 +1,16 @@
 import type { MarketOverview, CoinChart, ChartRange } from '../domain/types.js';
 import type { IMarketRepository } from '../ports/index.js';
-import { fetchByAuth, getStoredToken } from '../../../shared/http-client.js';
+import { apiFetch } from '../../../shared/http-client.js';
 
 export const createMarketRepository = (): IMarketRepository => ({
   async getMarketOverview(): Promise<MarketOverview> {
-    return fetchByAuth<MarketOverview>('GET', '/market/overview', getStoredToken());
+    return apiFetch<MarketOverview>('GET', '/market/overview');
   },
 
   async getCoinChart(id: string, range: ChartRange): Promise<CoinChart> {
-    return fetchByAuth<CoinChart>(
+    return apiFetch<CoinChart>(
       'GET',
-      `/market/coins/${encodeURIComponent(id)}/chart?range=${range}`,
-      getStoredToken()
+      `/market/coins/${encodeURIComponent(id)}/chart?range=${range}`
     );
   },
 });

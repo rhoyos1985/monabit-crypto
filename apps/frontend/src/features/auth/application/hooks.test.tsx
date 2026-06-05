@@ -2,11 +2,12 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useLogin,
   useRegister,
   useLogout,
-  useCurrentUser,
+  useSessionBootstrap,
   useAuth,
   useUpdateProfile,
   useChangePassword,
@@ -33,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   logout: vi.fn(),
   getCurrentUser: vi.fn(),
   signInWithGoogle: vi.fn(),
+  createSession: vi.fn(),
   updateMe: vi.fn(),
   changePassword: vi.fn(),
 }));
@@ -43,8 +45,13 @@ vi.mock('../infrastructure/api-client.js', () => ({
 
 const wrapperWith = (state?: Partial<SessionState>) => {
   const store = buildTestStore(state);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
   return ({ children }: { children: React.ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </Provider>
   );
 };
 
@@ -118,80 +125,95 @@ describe('Auth hooks', () => {
     expect(mocks.logout).toHaveBeenCalled();
   });
 
-  it('useCurrentUser carga el usuario cuando hay token sin user', async () => {
+  it('useSessionBootstrap rehidrata el usuario desde la cookie (GET /auth/me)', async () => {
     mocks.getCurrentUser.mockResolvedValueOnce(buildUser());
-    const { result } = renderHook(() => useCurrentUser(), {
-      wrapper: wrapperWith({ token: 'jwt-token', user: null }),
-    });
+    const { result } = renderHook(
+      () => {
+        useSessionBootstrap();
+        return useAuth();
+      },
+      { wrapper: wrapperWith() }
+    );
 
     await waitFor(() => {
       expect(mocks.getCurrentUser).toHaveBeenCalled();
     });
     await waitFor(() => {
-      expect(result.current?.email).toBe('a@b.com');
+      expect(result.current.user?.email).toBe('a@b.com');
+      expect(result.current.bootstrapped).toBe(true);
     });
   });
 
-  it('useCurrentUser limpia sesión cuando getCurrentUser falla', async () => {
+  it('useSessionBootstrap limpia la sesión cuando no hay cookie válida', async () => {
     mocks.getCurrentUser.mockRejectedValueOnce(new Error('expired'));
-    renderHook(() => useCurrentUser(), {
-      wrapper: wrapperWith({ token: 'jwt-token', user: null }),
-    });
+    const { result } = renderHook(
+      () => {
+        useSessionBootstrap();
+        return useAuth();
+      },
+      { wrapper: wrapperWith() }
+    );
     await waitFor(() => {
       expect(mocks.getCurrentUser).toHaveBeenCalled();
     });
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapped).toBe(true);
+    });
   });
 
-  it('useAuth devuelve user + token + isAuthenticated correcto', () => {
+  it('useSessionBootstrap no consulta si ya está rehidratada', () => {
+    renderHook(() => useSessionBootstrap(), {
+      wrapper: wrapperWith({ bootstrapped: true }),
+    });
+    expect(mocks.getCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it('useAuth devuelve user + isAuthenticated correcto', () => {
     const { result } = renderHook(() => useAuth(), {
-      wrapper: wrapperWith({ token: 'jwt', user: buildUser() }),
+      wrapper: wrapperWith({ user: buildUser() }),
     });
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user?.email).toBe('a@b.com');
   });
 
-  it('useUpdateProfile lanza error si no hay token', async () => {
-    const { result } = renderHook(() => useUpdateProfile(), {
-      wrapper: wrapperWith({ token: null }),
-    });
-    await expect(result.current({ firstName: 'X' })).rejects.toThrow(/sesión activa/i);
-  });
-
-  it('useUpdateProfile delega al repository con token', async () => {
+  it('useUpdateProfile delega al repository con el input', async () => {
     mocks.updateMe.mockResolvedValueOnce(buildUser());
     const { result } = renderHook(() => useUpdateProfile(), {
-      wrapper: wrapperWith({ token: 'jwt' }),
+      wrapper: wrapperWith({ user: buildUser() }),
     });
     await act(async () => {
       await result.current({ firstName: 'Nuevo' });
     });
-    expect(mocks.updateMe).toHaveBeenCalledWith({ firstName: 'Nuevo' }, 'jwt');
+    expect(mocks.updateMe).toHaveBeenCalledWith({ firstName: 'Nuevo' });
   });
 
-  it('useChangePassword lanza error si no hay token', async () => {
-    const { result } = renderHook(() => useChangePassword(), {
-      wrapper: wrapperWith({ token: null }),
+  it('useUpdateProfile propaga errores del repository', async () => {
+    mocks.updateMe.mockRejectedValueOnce(new Error('fail'));
+    const { result } = renderHook(() => useUpdateProfile(), {
+      wrapper: wrapperWith({ user: buildUser() }),
     });
-    await expect(
-      result.current({ currentPassword: 'old', newPassword: 'new12345' })
-    ).rejects.toThrow(/sesión activa/i);
+    await expect(result.current({ firstName: 'X' })).rejects.toThrow();
   });
 
   it('useChangePassword delega al repository', async () => {
     mocks.changePassword.mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => useChangePassword(), {
-      wrapper: wrapperWith({ token: 'jwt' }),
+      wrapper: wrapperWith({ user: buildUser() }),
     });
     await act(async () => {
       await result.current({ currentPassword: 'old', newPassword: 'new12345' });
     });
-    expect(mocks.changePassword).toHaveBeenCalled();
+    expect(mocks.changePassword).toHaveBeenCalledWith({
+      currentPassword: 'old',
+      newPassword: 'new12345',
+    });
   });
 
   it('useChangePassword propaga errores del repo', async () => {
     mocks.changePassword.mockRejectedValueOnce(new Error('bad password'));
     const { result } = renderHook(() => useChangePassword(), {
-      wrapper: wrapperWith({ token: 'jwt' }),
+      wrapper: wrapperWith({ user: buildUser() }),
     });
     await expect(
       result.current({ currentPassword: 'x', newPassword: 'new12345' })

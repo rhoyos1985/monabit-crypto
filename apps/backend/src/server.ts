@@ -1,6 +1,7 @@
 import 'express-async-errors';
 import express, { RequestHandler } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
@@ -24,8 +25,12 @@ const PORT = process.env.PORT || 8080;
 
 app.set('trust proxy', 1);
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+// `credentials: true` permite que el navegador envie la cookie httpOnly de
+// sesion. Con credenciales no se admite `origin: '*'`, asi que se fija un origen
+// concreto (en produccion la URL del frontend via CORS_ORIGIN).
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,

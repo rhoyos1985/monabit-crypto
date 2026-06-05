@@ -14,7 +14,14 @@ import { createRequireAuthMiddleware } from './middleware.js';
 export const createAuthRouter = (supabase: SupabaseClient): Router => {
   const router = Router();
   const authService = createSupabaseAuthService(supabase);
-  const { registerHandler, loginHandler, logoutHandler, getMeHandler, changePasswordHandler } = createAuthController(authService);
+  const {
+    registerHandler,
+    loginHandler,
+    logoutHandler,
+    sessionHandler,
+    getMeHandler,
+    changePasswordHandler,
+  } = createAuthController(authService);
   const requireAuth = createRequireAuthMiddleware(supabase);
 
   /**
@@ -97,6 +104,41 @@ export const createAuthRouter = (supabase: SupabaseClient): Router => {
    *             schema: { $ref: '#/components/schemas/ErrorResponse' }
    */
   router.post('/login', loginHandler as RequestHandler);
+
+  /**
+   * @swagger
+   * /auth/session:
+   *   post:
+   *     summary: Establecer sesión httpOnly desde un token de Supabase
+   *     description: Intercambia un access_token emitido por Supabase (flujo de Google OAuth resuelto en el cliente) por la cookie httpOnly de sesión.
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               accessToken:
+   *                 type: string
+   *             required: [accessToken]
+   *     responses:
+   *       200:
+   *         description: Sesión establecida
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 apiData:
+   *                   $ref: '#/components/schemas/User'
+   *       401:
+   *         description: Token inválido o expirado
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/ErrorResponse' }
+   */
+  router.post('/session', sessionHandler as RequestHandler);
 
   /**
    * @swagger

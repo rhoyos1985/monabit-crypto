@@ -1,17 +1,17 @@
 import type { UserPreferences, UpdatePreferencesInput } from '../domain/types.js';
 import type { IPreferencesRepository } from '../ports/index.js';
-import { fetchByAuth } from '../../../shared/http-client.js';
+import { apiFetch } from '../../../shared/http-client.js';
 
 export const createPreferencesRepository = (): IPreferencesRepository => ({
-  async getMyPreferences(token: string): Promise<UserPreferences> {
-    return fetchByAuth<UserPreferences>('GET', '/preferences/me', token);
+  async getMyPreferences(): Promise<UserPreferences> {
+    return apiFetch<UserPreferences>('GET', '/preferences/me');
   },
 
-  async updateMyPreferences(input: UpdatePreferencesInput, token: string): Promise<UserPreferences> {
-    return fetchByAuth<UserPreferences>('PATCH', '/preferences/me', token, input);
+  async updateMyPreferences(input: UpdatePreferencesInput): Promise<UserPreferences> {
+    return apiFetch<UserPreferences>('PATCH', '/preferences/me', input);
   },
 
-  async toggleFavorite(coinId: string, token: string): Promise<UserPreferences> {
-    return fetchByAuth<UserPreferences>('POST', '/preferences/me/favorites', token, { coinId });
+  async toggleFavorite(coinId: string): Promise<UserPreferences> {
+    return apiFetch<UserPreferences>('POST', '/preferences/me/favorites', { coinId });
   },
 });

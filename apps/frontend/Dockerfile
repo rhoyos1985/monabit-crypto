@@ -2,7 +2,8 @@
 FROM node:22-alpine AS builder
 
 # Build args para variables VITE_* (se embeben en el bundle final)
-ARG VITE_API_BASE_URL=""
+# El SPA llama a /api (mismo origen); nginx hace de reverse proxy hacia el backend.
+ARG VITE_API_BASE_URL="/api"
 ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_ANON_KEY=""
 ARG VITE_CRYPTO_PUBLIC_KEY=""
@@ -72,8 +73,10 @@ FROM nginxinc/nginx-unprivileged:alpine AS production
 
 WORKDIR /usr/share/nginx/html
 
-# Copiar configuración de nginx
-COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Plantilla de nginx: el entrypoint de la imagen ejecuta envsubst sobre
+# /etc/nginx/templates/*.template e inyecta ${BACKEND_URL} (URL del backend)
+# antes de arrancar nginx, generando /etc/nginx/conf.d/default.conf.
+COPY apps/frontend/nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copiar build desde builder
 COPY --from=builder /app/apps/frontend/dist ./

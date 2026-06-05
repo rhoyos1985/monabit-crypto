@@ -9,24 +9,22 @@ const preferencesRepository = createPreferencesRepository();
 const PREFERENCES_KEY = ['preferences', 'me'];
 
 export const usePreferences = () => {
-  const token = useSelector((state: RootState) => state.session.token);
+  // La autenticacion viaja en la cookie httpOnly; solo se condiciona la query a
+  // que exista una sesion de usuario activa en el estado.
+  const isAuthenticated = useSelector((state: RootState) => !!state.session.user);
   return useQuery<UserPreferences, Error>({
     queryKey: PREFERENCES_KEY,
-    queryFn: () => preferencesRepository.getMyPreferences(token!),
-    enabled: !!token,
+    queryFn: () => preferencesRepository.getMyPreferences(),
+    enabled: isAuthenticated,
     staleTime: 60_000,
   });
 };
 
 export const useUpdatePreferences = () => {
   const queryClient = useQueryClient();
-  const token = useSelector((state: RootState) => state.session.token);
 
   return useMutation({
-    mutationFn: (input: UpdatePreferencesInput) => {
-      if (!token) throw new Error('No hay sesión activa');
-      return preferencesRepository.updateMyPreferences(input, token);
-    },
+    mutationFn: (input: UpdatePreferencesInput) => preferencesRepository.updateMyPreferences(input),
     onSuccess: (data) => {
       queryClient.setQueryData(PREFERENCES_KEY, data);
     },
@@ -35,13 +33,9 @@ export const useUpdatePreferences = () => {
 
 export const useToggleFavorite = () => {
   const queryClient = useQueryClient();
-  const token = useSelector((state: RootState) => state.session.token);
 
   return useMutation({
-    mutationFn: (coinId: string) => {
-      if (!token) throw new Error('No hay sesión activa');
-      return preferencesRepository.toggleFavorite(coinId, token);
-    },
+    mutationFn: (coinId: string) => preferencesRepository.toggleFavorite(coinId),
     onSuccess: (data) => {
       queryClient.setQueryData(PREFERENCES_KEY, data);
     },

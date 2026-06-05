@@ -1,21 +1,21 @@
 import type { User, CreateUserInput, UpdateUserInput } from '../domain/types.js';
 import type { IUserRepository } from '../ports/index.js';
-import { fetchByAuth, getStoredToken } from '../../../shared/http-client.js';
+import { apiFetch } from '../../../shared/http-client.js';
 
 export const createUserRepository = (): IUserRepository => ({
   async listUsers(): Promise<User[]> {
-    return fetchByAuth<User[]>('GET', '/users', getStoredToken());
+    return apiFetch<User[]>('GET', '/users');
   },
 
   async createUser(input: CreateUserInput): Promise<User> {
-    return fetchByAuth<User>('POST', '/users', getStoredToken(), input);
+    return apiFetch<User>('POST', '/users', input);
   },
 
   async updateUser(id: string, input: UpdateUserInput): Promise<User> {
-    return fetchByAuth<User>('PATCH', `/users/${id}`, getStoredToken(), input);
+    return apiFetch<User>('PATCH', `/users/${id}`, input);
   },
 
   async deactivateUser(id: string): Promise<User> {
-    return fetchByAuth<User>('PATCH', `/users/${id}/deactivate`, getStoredToken(), {});
+    return apiFetch<User>('PATCH', `/users/${id}/deactivate`, {});
   },
 });

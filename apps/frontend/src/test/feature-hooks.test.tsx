@@ -136,20 +136,30 @@ describe('Dashboard feature hooks', () => {
   });
 });
 
+const sessionUser = {
+  id: 'u-1',
+  email: 'a@b.com',
+  authProvider: 'email' as const,
+  role: 'user' as const,
+  isActive: true,
+  createdAt: '',
+  updatedAt: '',
+};
+
 describe('Preferences feature hooks', () => {
   beforeEach(() => {
     Object.values(prefsMocks).forEach((m) => m.mockReset());
   });
 
-  it('usePreferences se deshabilita sin token', async () => {
+  it('usePreferences se deshabilita sin sesión de usuario', async () => {
     const { result } = renderHook(() => usePreferences(), {
-      wrapper: buildWrapper({ token: null }),
+      wrapper: buildWrapper({ user: null }),
     });
     await waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
     expect(prefsMocks.getMyPreferences).not.toHaveBeenCalled();
   });
 
-  it('usePreferences carga con token presente', async () => {
+  it('usePreferences carga con usuario autenticado', async () => {
     prefsMocks.getMyPreferences.mockResolvedValueOnce({
       userId: 'u-1',
       theme: 'light',
@@ -157,20 +167,13 @@ describe('Preferences feature hooks', () => {
       updatedAt: '',
     });
     const { result } = renderHook(() => usePreferences(), {
-      wrapper: buildWrapper({ token: 'jwt' }),
+      wrapper: buildWrapper({ user: sessionUser }),
     });
     await waitFor(() => expect(result.current.data).toBeDefined());
-    expect(prefsMocks.getMyPreferences).toHaveBeenCalledWith('jwt');
+    expect(prefsMocks.getMyPreferences).toHaveBeenCalledWith();
   });
 
-  it('useUpdatePreferences lanza si no hay token', async () => {
-    const { result } = renderHook(() => useUpdatePreferences(), {
-      wrapper: buildWrapper({ token: null }),
-    });
-    await expect(result.current.mutateAsync({ theme: 'dark' })).rejects.toThrow(/sesión/i);
-  });
-
-  it('useUpdatePreferences ejecuta mutación con token', async () => {
+  it('useUpdatePreferences ejecuta mutación', async () => {
     prefsMocks.updateMyPreferences.mockResolvedValueOnce({
       userId: 'u-1',
       theme: 'dark',
@@ -178,22 +181,15 @@ describe('Preferences feature hooks', () => {
       updatedAt: '',
     });
     const { result } = renderHook(() => useUpdatePreferences(), {
-      wrapper: buildWrapper({ token: 'jwt' }),
+      wrapper: buildWrapper({ user: sessionUser }),
     });
     await act(async () => {
       await result.current.mutateAsync({ theme: 'dark' });
     });
-    expect(prefsMocks.updateMyPreferences).toHaveBeenCalled();
+    expect(prefsMocks.updateMyPreferences).toHaveBeenCalledWith({ theme: 'dark' });
   });
 
-  it('useToggleFavorite lanza si no hay token', async () => {
-    const { result } = renderHook(() => useToggleFavorite(), {
-      wrapper: buildWrapper({ token: null }),
-    });
-    await expect(result.current.mutateAsync('bitcoin')).rejects.toThrow(/sesión/i);
-  });
-
-  it('useToggleFavorite ejecuta mutación con coinId y token', async () => {
+  it('useToggleFavorite ejecuta mutación con coinId', async () => {
     prefsMocks.toggleFavorite.mockResolvedValueOnce({
       userId: 'u-1',
       theme: 'light',
@@ -201,12 +197,12 @@ describe('Preferences feature hooks', () => {
       updatedAt: '',
     });
     const { result } = renderHook(() => useToggleFavorite(), {
-      wrapper: buildWrapper({ token: 'jwt' }),
+      wrapper: buildWrapper({ user: sessionUser }),
     });
     await act(async () => {
       await result.current.mutateAsync('bitcoin');
     });
-    expect(prefsMocks.toggleFavorite).toHaveBeenCalledWith('bitcoin', 'jwt');
+    expect(prefsMocks.toggleFavorite).toHaveBeenCalledWith('bitcoin');
   });
 });
 

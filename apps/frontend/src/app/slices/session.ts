@@ -17,18 +17,21 @@ export interface SessionUser {
   updatedAt: string;
 }
 
+// El token ya no vive en el estado de JS: la sesion la transporta la cookie
+// httpOnly. El estado solo refleja el usuario autenticado. `bootstrapped` indica
+// si ya se intento rehidratar la sesion contra el backend (GET /auth/me).
 export interface SessionState {
   user: SessionUser | null;
-  token: string | null;
   isLoading: boolean;
   error: string | null;
+  bootstrapped: boolean;
 }
 
 const initialState: SessionState = {
   user: null,
-  token: localStorage.getItem('auth_token'),
   isLoading: false,
   error: null,
+  bootstrapped: false,
 };
 
 const sessionSlice = createSlice({
@@ -41,17 +44,15 @@ const sessionSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setSession: (state, action: PayloadAction<{ user: SessionUser; token: string }>) => {
+    setSession: (state, action: PayloadAction<{ user: SessionUser }>) => {
       state.user = action.payload.user;
-      state.token = action.payload.token;
       state.error = null;
-      localStorage.setItem('auth_token', action.payload.token);
+      state.bootstrapped = true;
     },
     clearSession: (state) => {
       state.user = null;
-      state.token = null;
       state.error = null;
-      localStorage.removeItem('auth_token');
+      state.bootstrapped = true;
     },
     setUser: (state, action: PayloadAction<SessionUser>) => {
       state.user = action.payload;
