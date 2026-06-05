@@ -7,7 +7,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "routes:gen": "tsr generate",
-    "typecheck": "tsr generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "test": "vitest run",
