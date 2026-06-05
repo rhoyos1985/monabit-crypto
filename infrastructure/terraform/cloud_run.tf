@@ -73,7 +73,7 @@ resource "google_cloud_run_v2_service" "backend" {
       # El frontend hace de reverse proxy (/api -> backend), por lo que el
       # navegador es mismo-origen y CORS no se ejercita en produccion. Se toma de
       # una variable opcional para no crear una dependencia circular con el
-      # servicio frontend (que ahora depende del backend via BACKEND_URL).
+      # servicio frontend (que ahora depende del backend via BACKEND_HOST).
       env {
         name  = "CORS_ORIGIN"
         value = var.cors_origin
@@ -173,12 +173,13 @@ resource "google_cloud_run_v2_service" "frontend" {
         container_port = 8080
       }
 
-      # URL del backend que nginx usa como destino del reverse proxy (/api/* ->
-      # backend). envsubst la inyecta en la plantilla de nginx al arrancar. Esto
-      # mantiene frontend y backend en el mismo origen para la cookie httpOnly.
+      # Host del backend (sin esquema) que nginx usa como destino del reverse
+      # proxy (/api/* -> backend) y como SNI/Host hacia Cloud Run. envsubst lo
+      # inyecta en la plantilla de nginx al arrancar. Mantiene frontend y backend
+      # en el mismo origen de cara al navegador para la cookie httpOnly.
       env {
-        name  = "BACKEND_URL"
-        value = google_cloud_run_v2_service.backend.uri
+        name  = "BACKEND_HOST"
+        value = replace(google_cloud_run_v2_service.backend.uri, "https://", "")
       }
 
       resources {

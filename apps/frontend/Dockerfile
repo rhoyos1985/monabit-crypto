@@ -74,7 +74,7 @@ FROM nginxinc/nginx-unprivileged:alpine AS production
 WORKDIR /usr/share/nginx/html
 
 # Plantilla de nginx: el entrypoint de la imagen ejecuta envsubst sobre
-# /etc/nginx/templates/*.template e inyecta ${BACKEND_URL} (URL del backend)
+# /etc/nginx/templates/*.template e inyecta ${BACKEND_HOST} (host del backend)
 # antes de arrancar nginx, generando /etc/nginx/conf.d/default.conf.
 COPY apps/frontend/nginx.conf.template /etc/nginx/templates/default.conf.template
 
