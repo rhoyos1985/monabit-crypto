@@ -122,7 +122,9 @@ terceros, bloqueadas por los navegadores), el frontend hace de **reverse proxy**
 el SPA llama a `/api/*` (su propio origen) y el proxy lo reenvía al backend.
 
 - Desarrollo: el dev server de Vite proxya `/api` → `VITE_PROXY_TARGET`.
-- Producción: nginx proxya `/api` → `${BACKEND_URL}` (inyectado por Terraform).
+- Producción: nginx proxya `/api` → `https://${BACKEND_HOST}` (Host + SNI del
+  backend; inyectado por Terraform). Cloud Run enruta por host, por eso el proxy
+  reescribe `Host` al del backend; el navegador solo ve el origen del frontend.
 
 Así la cookie nunca es de terceros y `SameSite=Lax` mitiga CSRF. La cookie es
 `Secure` solo en producción (`NODE_ENV=production`), para permitir HTTP en local.

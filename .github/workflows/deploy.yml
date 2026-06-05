@@ -156,7 +156,7 @@ jobs:
           docker build \
             -f apps/frontend/Dockerfile \
             --target production \
-            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
+            --build-arg VITE_API_BASE_URL=/api \
             --build-arg VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }} \
             --build-arg VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }} \
             --build-arg VITE_CRYPTO_PUBLIC_KEY="${{ secrets.CRYPTO_PUBLIC_KEY }}" \
@@ -195,7 +195,9 @@ jobs:
 
   frontend-deploy:
     name: Frontend - Deploy to Cloud Run
-    needs: frontend-build
+    # Depende de terraform-apply: la imagen del frontend solo arranca si el
+    # servicio ya tiene la env BACKEND_HOST que consume nginx (reverse proxy).
+    needs: [frontend-build, terraform-apply]
     runs-on: ubuntu-latest
     permissions:
       contents: read
